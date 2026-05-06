@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -109,7 +110,9 @@ export default function ChatbotPage() {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+    const [isDeletingConversation, setIsDeletingConversation] = useState(false);
     const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(true);
+    const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
     const [aiMeta, setAiMeta] = useState({
         provider: page.props.ai?.provider ?? 'ai',
         model: page.props.ai?.model ?? '',
@@ -263,19 +266,25 @@ export default function ChatbotPage() {
         }
     };
 
-    const deleteConversation = async (conversationId: number) => {
+    const requestDeleteConversation = (conversationId: number) => {
         const target = conversations.find((item) => item.id === conversationId);
 
         if (!target) {
             return;
         }
 
-        if (!window.confirm(`Hapus riwayat \"${target.title}\"?`)) {
+        setConversationToDelete(target);
+    };
+
+    const confirmDeleteConversation = async () => {
+        if (!conversationToDelete || isDeletingConversation) {
             return;
         }
 
+        setIsDeletingConversation(true);
+
         try {
-            const response = await fetch(`/chatbot/conversations/${conversationId}`, {
+            const response = await fetch(`/chatbot/conversations/${conversationToDelete.id}`, {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: {
@@ -295,15 +304,19 @@ export default function ChatbotPage() {
 
             toast.success('Riwayat percakapan dihapus.');
 
-            if (activeConversationId === conversationId) {
+            if (activeConversationId === conversationToDelete.id) {
                 router.get('/chatbot', {}, { preserveScroll: true, preserveState: false, replace: true });
+                setConversationToDelete(null);
                 return;
             }
 
-            setConversations((prev) => prev.filter((item) => item.id !== conversationId));
+            setConversations((prev) => prev.filter((item) => item.id !== conversationToDelete.id));
+            setConversationToDelete(null);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Gagal menghapus percakapan.';
             toast.error(message);
+        } finally {
+            setIsDeletingConversation(false);
         }
     };
 
@@ -441,7 +454,7 @@ export default function ChatbotPage() {
                                                             variant="ghost"
                                                             size="sm"
                                                             className="h-7 px-2 text-muted-foreground hover:text-destructive"
-                                                            onClick={() => void deleteConversation(conversation.id)}
+                                                            onClick={() => requestDeleteConversation(conversation.id)}
                                                             aria-label="Hapus riwayat percakapan"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
@@ -560,6 +573,25 @@ export default function ChatbotPage() {
                     </Card>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={conversationToDelete !== null}
+                onOpenChange={(open) => {
+                    if (!open && !isDeletingConversation) {
+                        setConversationToDelete(null);
+                    }
+                }}
+                title="Hapus Riwayat Chat?"
+                description={
+                    conversationToDelete
+                        ? `Riwayat "${conversationToDelete.title}" akan dihapus permanen dan tidak bisa dikembalikan.`
+                        : 'Riwayat ini akan dihapus permanen.'
+                }
+                confirmLabel={isDeletingConversation ? 'Menghapus...' : 'Hapus'}
+                cancelLabel="Batal"
+                destructive
+                onConfirm={() => void confirmDeleteConversation()}
+            />
         </>
     );
 }

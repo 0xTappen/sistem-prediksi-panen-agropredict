@@ -12,7 +12,6 @@ import {
     Menu,
     Moon,
     Sparkles,
-    Sprout,
     Sun,
     Target,
     TrendingUp,
@@ -22,6 +21,7 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import AppLogoIcon from '@/components/app-logo-icon';
 import { useAppearance, type Appearance } from '@/hooks/use-appearance';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
@@ -146,8 +146,8 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                 <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur">
                     <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:px-8">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="rounded-xl bg-primary p-2 text-primary-foreground">
-                                <Sprout className="h-4 w-4" />
+                            <div className="rounded-xl bg-primary/15 p-2.5 ring-1 ring-primary/20">
+                                <AppLogoIcon className="h-8 w-8 rounded-lg" />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold leading-none">Sistem Prediksi Panen</p>
@@ -230,7 +230,7 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                 </header>
 
                 <main>
-                    <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-12 pt-10 md:px-8 lg:grid-cols-2 lg:items-center lg:pt-14">
+                    <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-12 pt-10 md:px-8 lg:grid-cols-2 lg:items-center lg:gap-10 lg:pt-14">
                         <div>
                             <Badge className="bg-secondary text-secondary-foreground">Smart Agriculture</Badge>
                             <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-5xl">
@@ -256,7 +256,18 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                             </div>
                         </div>
 
-                        <Card className="rounded-3xl border border-border bg-card">
+                        <Card className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+                            <div className="relative border-b border-border bg-muted/40 p-3">
+                                <img
+                                    src="/images/agro-dashboard-hero.svg"
+                                    alt="Ilustrasi dashboard prediksi panen"
+                                    className="h-auto w-full rounded-2xl border border-border/70 bg-background object-cover"
+                                    loading="lazy"
+                                />
+                                <div className="pointer-events-none absolute inset-x-0 bottom-3 mx-6 rounded-xl bg-card/85 px-3 py-2 text-xs text-muted-foreground backdrop-blur">
+                                    Visual ringkas: estimasi panen, skor kecocokan, dan rekomendasi.
+                                </div>
+                            </div>
                             <CardHeader>
                                 <CardTitle className="text-lg">Preview Smart Dashboard</CardTitle>
                                 <CardDescription>Contoh ringkasan data panen berbasis input lahan</CardDescription>
@@ -373,22 +384,32 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                                 <CardTitle>Preview Dashboard</CardTitle>
                                 <CardDescription>Data dummy statis untuk gambaran ringkasan sistem.</CardDescription>
                             </CardHeader>
-                            <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                <div className="rounded-2xl border border-border bg-muted p-4">
-                                    <p className="text-xs text-muted-foreground">Total Proyek</p>
-                                    <p className="mt-1 text-2xl font-semibold text-primary">12</p>
+                            <CardContent className="grid gap-5 lg:grid-cols-[1.25fr_1fr]">
+                                <div className="order-2 grid gap-4 md:grid-cols-2 lg:order-1">
+                                    <div className="rounded-2xl border border-border bg-muted p-4">
+                                        <p className="text-xs text-muted-foreground">Total Proyek</p>
+                                        <p className="mt-1 text-2xl font-semibold text-primary">12</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted p-4">
+                                        <p className="text-xs text-muted-foreground">Estimasi Panen</p>
+                                        <p className="mt-1 text-2xl font-semibold text-primary">8.4 ton</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted p-4">
+                                        <p className="text-xs text-muted-foreground">Skor Kecocokan</p>
+                                        <p className="mt-1 text-2xl font-semibold text-info">86%</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-border bg-muted p-4">
+                                        <p className="text-xs text-muted-foreground">Rekomendasi</p>
+                                        <p className="mt-1 text-sm font-medium">Tambahkan pupuk kaya Nitrogen</p>
+                                    </div>
                                 </div>
-                                <div className="rounded-2xl border border-border bg-muted p-4">
-                                    <p className="text-xs text-muted-foreground">Estimasi Panen</p>
-                                    <p className="mt-1 text-2xl font-semibold text-primary">8.4 ton</p>
-                                </div>
-                                <div className="rounded-2xl border border-border bg-muted p-4">
-                                    <p className="text-xs text-muted-foreground">Skor Kecocokan</p>
-                                    <p className="mt-1 text-2xl font-semibold text-info">86%</p>
-                                </div>
-                                <div className="rounded-2xl border border-border bg-muted p-4">
-                                    <p className="text-xs text-muted-foreground">Rekomendasi</p>
-                                    <p className="mt-1 text-sm font-medium">Tambahkan pupuk kaya Nitrogen</p>
+                                <div className="order-1 rounded-2xl border border-border bg-muted/40 p-3 lg:order-2">
+                                    <img
+                                        src="/images/agro-dashboard-hero.svg"
+                                        alt="Mockup dashboard prediksi panen"
+                                        className="h-full min-h-[220px] w-full rounded-xl border border-border/60 object-cover"
+                                        loading="lazy"
+                                    />
                                 </div>
                             </CardContent>
                         </Card>

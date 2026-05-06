@@ -8,7 +8,10 @@ use App\Http\Requests\Settings\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,13 +33,26 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill(Arr::except($validated, ['avatar', 'remove_avatar']));
+
+        if (! empty($validated['remove_avatar'])) {
+            $this->deleteOldAvatar($user->avatar);
+            $user->avatar = null;
         }
 
-        $request->user()->save();
+        if ($request->hasFile('avatar')) {
+            $this->deleteOldAvatar($user->avatar);
+            $user->avatar = $this->storeAvatar($request->file('avatar'));
+        }
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
@@ -58,5 +74,31 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    protected function storeAvatar(UploadedFile $file): string
+    {
+        $path = $file->store('avatars', 'public');
+
+        return '/storage/'.$path;
+    }
+
+    protected function deleteOldAvatar(?string $avatarPath): void
+    {
+        if ($avatarPath === null || $avatarPath === '') {
+            return;
+        }
+
+        if (! str_starts_with($avatarPath, '/storage/')) {
+            return;
+        }
+
+        $storageRelativePath = ltrim(str_replace('/storage/', '', $avatarPath), '/');
+
+        if ($storageRelativePath === '') {
+            return;
+        }
+
+        Storage::disk('public')->delete($storageRelativePath);
     }
 }

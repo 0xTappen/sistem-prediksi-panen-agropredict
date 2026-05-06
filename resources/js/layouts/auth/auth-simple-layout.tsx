@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { Leaf, Sprout } from 'lucide-react';
+import { Leaf } from 'lucide-react';
+import AppLogoIcon from '@/components/app-logo-icon';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -14,8 +15,8 @@ export default function AuthSimpleLayout({
                 <div className="relative hidden overflow-hidden border-r border-border bg-gradient-to-br from-secondary/30 via-muted to-background p-10 lg:flex lg:flex-col lg:justify-between">
                     <div>
                         <Link href={home()} className="inline-flex items-center gap-3 text-foreground">
-                            <div className="rounded-2xl bg-primary p-2 text-primary-foreground">
-                                <Sprout className="h-5 w-5" />
+                            <div className="rounded-2xl bg-primary/15 p-2.5 ring-1 ring-primary/20">
+                                <AppLogoIcon className="h-9 w-9 rounded-lg" />
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">
@@ -49,8 +50,8 @@ export default function AuthSimpleLayout({
                     <div className="w-full max-w-md space-y-7">
                         <div className="flex flex-col gap-4 text-center lg:text-left">
                             <Link href={home()} className="inline-flex items-center justify-center gap-2 lg:hidden">
-                                <div className="rounded-2xl bg-primary p-2 text-primary-foreground">
-                                    <Sprout className="h-5 w-5" />
+                                <div className="rounded-2xl bg-primary/15 p-2.5 ring-1 ring-primary/20">
+                                    <AppLogoIcon className="h-9 w-9 rounded-lg" />
                                 </div>
                                 <span className="font-semibold text-foreground">Sistem Prediksi Panen</span>
                             </Link>
