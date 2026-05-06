@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\UserSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -16,7 +17,19 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        View::share('appearance', $request->cookie('appearance') ?? 'light');
+        $appearance = $request->cookie('appearance');
+
+        if (! in_array($appearance, ['light', 'dark', 'system'], true) && $request->user()) {
+            $appearance = UserSetting::query()
+                ->where('user_id', $request->user()->id)
+                ->value('theme');
+        }
+
+        if (! in_array($appearance, ['light', 'dark', 'system'], true)) {
+            $appearance = 'light';
+        }
+
+        View::share('appearance', $appearance);
 
         return $next($request);
     }

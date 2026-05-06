@@ -8,11 +8,17 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', function () {
+    return Inertia::render('welcome', [
+        'canRegister' => Features::enabled(Features::registration()),
+        'auth' => [
+            'user' => auth()->user(),
+        ],
+    ]);
+})->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -12,6 +12,10 @@ export type UseAppearanceReturn = {
 const listeners = new Set<() => void>();
 let currentAppearance: Appearance = 'light';
 
+const isAppearanceValue = (value: string | null): value is Appearance => {
+    return value === 'light' || value === 'dark' || value === 'system';
+};
+
 const prefersDark = (): boolean => {
     if (typeof window === 'undefined') {
         return false;
@@ -29,14 +33,34 @@ const setCookie = (name: string, value: string, days = 365): void => {
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
+const getCookieValue = (name: string): string | null => {
+    if (typeof document === 'undefined') {
+        return null;
+    }
+
+    const escaped = name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`));
+
+    return match ? decodeURIComponent(match[1]) : null;
+};
+
 const getStoredAppearance = (): Appearance => {
     if (typeof window === 'undefined') {
         return 'light';
     }
 
-    const stored = localStorage.getItem('appearance') as Appearance | null;
+    const stored = localStorage.getItem('appearance');
+    const cookie = getCookieValue('appearance');
 
-    return stored ?? 'light';
+    if (isAppearanceValue(stored)) {
+        return stored;
+    }
+
+    if (isAppearanceValue(cookie)) {
+        return cookie;
+    }
+
+    return 'light';
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
@@ -77,12 +101,11 @@ export function initializeTheme(): void {
         return;
     }
 
-    if (!localStorage.getItem('appearance')) {
-        localStorage.setItem('appearance', 'light');
-        setCookie('appearance', 'light');
-    }
-
     currentAppearance = getStoredAppearance();
+
+    localStorage.setItem('appearance', currentAppearance);
+    setCookie('appearance', currentAppearance);
+
     applyTheme(currentAppearance);
 
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);

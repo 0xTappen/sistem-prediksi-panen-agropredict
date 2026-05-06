@@ -1,5 +1,15 @@
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { ChevronsUpDown } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,40 +29,74 @@ export function NavUser() {
     const { auth } = usePage().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
+    const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
 
     if (!auth.user) {
         return null;
     }
 
+    const handleLogout = () => {
+        setOpenLogoutDialog(false);
+        router.flushAll();
+        router.post('/logout');
+    };
+
     return (
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <SidebarMenuButton
-                            size="lg"
-                            className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
-                            data-test="sidebar-menu-button"
+        <>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <SidebarMenuButton
+                                size="lg"
+                                className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
+                                data-test="sidebar-menu-button"
+                            >
+                                <UserInfo user={auth.user} />
+                                <ChevronsUpDown className="ml-auto size-4" />
+                            </SidebarMenuButton>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                            align="end"
+                            side={
+                                isMobile
+                                    ? 'bottom'
+                                    : state === 'collapsed'
+                                      ? 'left'
+                                      : 'bottom'
+                            }
                         >
-                            <UserInfo user={auth.user} />
-                            <ChevronsUpDown className="ml-auto size-4" />
-                        </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                        align="end"
-                        side={
-                            isMobile
-                                ? 'bottom'
-                                : state === 'collapsed'
-                                  ? 'left'
-                                  : 'bottom'
-                        }
-                    >
-                        <UserMenuContent user={auth.user} />
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </SidebarMenuItem>
-        </SidebarMenu>
+                            <UserMenuContent
+                                user={auth.user}
+                                onRequestLogout={() => setOpenLogoutDialog(true)}
+                            />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </SidebarMenuItem>
+            </SidebarMenu>
+
+            <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Logout</DialogTitle>
+                        <DialogDescription>
+                            Anda yakin ingin keluar dari sesi saat ini?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenLogoutDialog(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleLogout}>
+                            Ya, Logout
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

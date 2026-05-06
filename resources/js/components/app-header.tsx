@@ -1,10 +1,19 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -68,6 +77,13 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
     const { auth } = page.props;
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
+    const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+
+    const handleLogout = () => {
+        setOpenLogoutDialog(false);
+        router.flushAll();
+        router.post('/logout');
+    };
 
     return (
         <>
@@ -229,13 +245,37 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end">
                                 {auth.user && (
-                                    <UserMenuContent user={auth.user} />
+                                    <UserMenuContent
+                                        user={auth.user}
+                                        onRequestLogout={() => setOpenLogoutDialog(true)}
+                                    />
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </div>
             </div>
+            <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Logout</DialogTitle>
+                        <DialogDescription>
+                            Anda yakin ingin keluar dari sesi saat ini?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenLogoutDialog(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleLogout}>
+                            Ya, Logout
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             {breadcrumbs.length > 1 && (
                 <div className="flex w-full border-b border-sidebar-border/70">
                     <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">

@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateSettingRequest;
 use App\Models\UserSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,10 +33,14 @@ class SettingController extends Controller
 
     public function update(UpdateSettingRequest $request): RedirectResponse
     {
+        $validated = $request->validated();
+
         UserSetting::query()->updateOrCreate(
             ['user_id' => $request->user()->id],
-            $request->validated(),
+            $validated,
         );
+
+        Cookie::queue(cookie('appearance', $validated['theme'], 60 * 24 * 365, '/', null, false, false, false, 'Lax'));
 
         return back()->with('toast', ['type' => 'success', 'message' => 'Pengaturan aplikasi berhasil diperbarui.']);
     }

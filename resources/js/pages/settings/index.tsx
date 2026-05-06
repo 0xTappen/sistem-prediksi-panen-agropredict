@@ -12,9 +12,13 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { useAppearance } from '@/hooks/use-appearance';
+import type { Appearance } from '@/hooks/use-appearance';
 import type { UserSetting } from '@/types';
 
 export default function AppSettings({ setting }: { setting: UserSetting }) {
+    const { updateAppearance } = useAppearance();
+
     const { data, setData, put, processing, errors } = useForm({
         theme: setting.theme,
         notification_enabled: setting.notification_enabled,
@@ -27,6 +31,12 @@ export default function AppSettings({ setting }: { setting: UserSetting }) {
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         put('/settings');
+    };
+
+    const handleThemeChange = (value: string) => {
+        const nextTheme = value as Appearance;
+        setData('theme', nextTheme);
+        updateAppearance(nextTheme);
     };
 
     return (
@@ -47,13 +57,8 @@ export default function AppSettings({ setting }: { setting: UserSetting }) {
                     >
                         <div className="grid gap-2">
                             <Label>Tema</Label>
-                            <Select
-                                value={data.theme}
-                                onValueChange={(value) =>
-                                    setData('theme', value as 'light' | 'dark' | 'system')
-                                }
-                            >
-                                <SelectTrigger className="w-full bg-white">
+                            <Select value={data.theme} onValueChange={handleThemeChange}>
+                                <SelectTrigger className="w-full bg-white dark:bg-card">
                                     <SelectValue placeholder="Pilih tema" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -76,7 +81,7 @@ export default function AppSettings({ setting }: { setting: UserSetting }) {
                                         setData('temperature_unit', value as 'celsius')
                                     }
                                 >
-                                    <SelectTrigger className="w-full bg-white">
+                                    <SelectTrigger className="w-full bg-white dark:bg-card">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -94,7 +99,7 @@ export default function AppSettings({ setting }: { setting: UserSetting }) {
                                         setData('rainfall_unit', value as 'mm')
                                     }
                                 >
-                                    <SelectTrigger className="w-full bg-white">
+                                    <SelectTrigger className="w-full bg-white dark:bg-card">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -110,7 +115,7 @@ export default function AppSettings({ setting }: { setting: UserSetting }) {
                                     value={data.yield_unit}
                                     onValueChange={(value) => setData('yield_unit', value as 'ton')}
                                 >
-                                    <SelectTrigger className="w-full bg-white">
+                                    <SelectTrigger className="w-full bg-white dark:bg-card">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'light') === 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +7,10 @@
         <script>
             (function() {
                 const appearance = '{{ $appearance ?? "light" }}';
-                if (appearance === 'dark') {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark);
+
+                if (isDark) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.colorScheme = 'dark';
                 } else {

@@ -1,42 +1,50 @@
-import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { Link } from '@inertiajs/react';
+import { Laptop, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { UserInfo } from '@/components/user-info';
+import { useAppearance } from '@/hooks/use-appearance';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { UserInfo } from '@/components/user-info';
+import type { Appearance } from '@/hooks/use-appearance';
 import type { User } from '@/types';
 
 type Props = {
     user: User;
+    onRequestLogout: () => void;
 };
 
-export function UserMenuContent({ user }: Props) {
-    const cleanup = useMobileNavigation();
-    const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+const themeOptions: Array<{
+    value: Appearance;
+    label: string;
+    icon: typeof Sun;
+}> = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Laptop },
+];
 
-    const openLogout = () => {
-        cleanup();
-        setOpenLogoutDialog(true);
+export function UserMenuContent({ user, onRequestLogout }: Props) {
+    const cleanup = useMobileNavigation();
+    const { appearance, updateAppearance } = useAppearance();
+
+    const handleAppearanceChange = (value: string) => {
+        if (value === 'light' || value === 'dark' || value === 'system') {
+            updateAppearance(value);
+        }
     };
 
-    const handleLogout = () => {
-        setOpenLogoutDialog(false);
-        router.flushAll();
-        router.post('/logout');
+    const handleRequestLogout = () => {
+        cleanup();
+        onRequestLogout();
     };
 
     return (
@@ -48,6 +56,29 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Sun className="mr-2" />
+                        Tema
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                        <DropdownMenuRadioGroup
+                            value={appearance}
+                            onValueChange={handleAppearanceChange}
+                        >
+                            {themeOptions.map((option) => (
+                                <DropdownMenuRadioItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
+                                    <option.icon className="mr-2" />
+                                    {option.label}
+                                </DropdownMenuRadioItem>
+                            ))}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
@@ -64,35 +95,14 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuItem asChild>
                 <button
                     className="flex w-full cursor-pointer items-center"
-                    onClick={openLogout}
+                    onClick={handleRequestLogout}
                     data-test="logout-button"
+                    type="button"
                 >
                     <LogOut className="mr-2" />
                     Logout
                 </button>
             </DropdownMenuItem>
-
-            <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Konfirmasi Logout</DialogTitle>
-                        <DialogDescription>
-                            Anda yakin ingin keluar dari sesi saat ini?
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setOpenLogoutDialog(false)}
-                        >
-                            Batal
-                        </Button>
-                        <Button variant="destructive" onClick={handleLogout}>
-                            Ya, Logout
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </>
     );
 }
