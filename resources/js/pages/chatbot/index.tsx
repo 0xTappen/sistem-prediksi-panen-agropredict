@@ -111,6 +111,7 @@ export default function ChatbotPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
     const [isDeletingConversation, setIsDeletingConversation] = useState(false);
+    const [isHistoryVisible, setIsHistoryVisible] = useState(false);
     const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(true);
     const [isXlScreen, setIsXlScreen] = useState(false);
     const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
@@ -146,9 +147,16 @@ export default function ChatbotPage() {
 
     useEffect(() => {
         const media = window.matchMedia('(min-width: 1280px)');
-        const onChange = (event: MediaQueryListEvent) => setIsXlScreen(event.matches);
+        const onChange = (event: MediaQueryListEvent) => {
+            setIsXlScreen(event.matches);
+            setIsHistoryVisible(event.matches);
+            if (!event.matches) {
+                setIsHistoryCollapsed(true);
+            }
+        };
 
         setIsXlScreen(media.matches);
+        setIsHistoryVisible(media.matches);
         media.addEventListener('change', onChange);
 
         return () => {
@@ -342,14 +350,28 @@ export default function ChatbotPage() {
             <Head title="Chatbot AI" />
 
             <div className="h-[calc(100dvh-64px)] overflow-hidden md:h-[calc(100dvh-72px)]">
-                <div className="flex h-full min-h-0 flex-row gap-2 overflow-hidden p-2 md:gap-3 md:p-3">
+                <div className="relative flex h-full min-h-0 flex-row gap-2 overflow-hidden p-1.5 sm:p-2 md:gap-3 md:p-3">
+                    {!isXlScreen && isHistoryVisible ? (
+                        <button
+                            type="button"
+                            aria-label="Tutup panel riwayat"
+                            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[1px]"
+                            onClick={() => setIsHistoryVisible(false)}
+                        />
+                    ) : null}
                     <Card
                         className={cn(
-                            'min-h-0 shrink-0 rounded-3xl border border-border bg-card shadow-sm xl:h-full xl:transition-[width] xl:duration-300',
-                            showExpandedHistory ? 'xl:w-[270px] 2xl:w-[300px]' : 'w-[72px] sm:w-[76px] xl:w-[56px]',
+                            'min-h-0 shrink-0 rounded-2xl border-0 bg-muted/55 shadow-none transition-[width,opacity,transform] duration-300 xl:h-full xl:transition-[width,opacity]',
+                            !isHistoryVisible
+                                ? 'w-0 -translate-x-3 border-0 opacity-0 pointer-events-none shadow-none'
+                                : isXlScreen
+                                  ? showExpandedHistory
+                                      ? 'xl:w-[270px] 2xl:w-[300px]'
+                                      : 'w-[72px] sm:w-[76px] xl:w-[56px]'
+                                  : 'absolute inset-y-2 left-2 z-30 w-[min(84vw,320px)]',
                         )}
                     >
-                        {!showExpandedHistory ? (
+                        {isXlScreen && !showExpandedHistory ? (
                             <div className="relative z-10 flex h-full min-h-0 flex-col items-center gap-2 p-2">
                                 <Button
                                     variant="outline"
@@ -409,7 +431,13 @@ export default function ChatbotPage() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                onClick={() => setIsHistoryCollapsed(true)}
+                                                onClick={() => {
+                                                    if (isXlScreen) {
+                                                        setIsHistoryCollapsed(true);
+                                                    } else {
+                                                        setIsHistoryVisible(false);
+                                                    }
+                                                }}
                                                 aria-label="Kecilkan panel riwayat"
                                             >
                                                 <PanelLeftClose className="h-4 w-4" />
@@ -428,7 +456,7 @@ export default function ChatbotPage() {
                                 </CardHeader>
                                 <CardContent className="min-h-0 space-y-2 xl:h-[calc(100%-7.5rem)] xl:overflow-hidden">
                                     {conversations.length === 0 ? (
-                                        <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                                        <div className="p-2 text-sm text-muted-foreground">
                                             Belum ada riwayat. Klik <span className="font-medium text-foreground">Chat Baru</span> untuk mulai.
                                         </div>
                                     ) : (
@@ -437,10 +465,10 @@ export default function ChatbotPage() {
                                                 <div
                                                     key={conversation.id}
                                                     className={cn(
-                                                        'group min-w-0 overflow-hidden rounded-2xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm',
+                                                        'group min-w-0 overflow-hidden rounded-2xl border-0 p-3 transition-all duration-200',
                                                         activeConversationId === conversation.id
-                                                            ? 'border-primary/40 bg-primary/10'
-                                                            : 'border-border bg-muted/20 hover:bg-muted/40',
+                                                            ? 'bg-primary/10'
+                                                            : 'bg-transparent hover:bg-muted/25',
                                                     )}
                                                 >
                                                     <button
@@ -452,6 +480,9 @@ export default function ChatbotPage() {
                                                                 { conversation: conversation.id },
                                                                 { preserveScroll: true, preserveState: false, replace: true },
                                                             );
+                                                            if (!isXlScreen) {
+                                                                setIsHistoryVisible(false);
+                                                            }
                                                         }}
                                                     >
                                                         <p className="line-clamp-2 text-sm font-medium text-foreground">
@@ -483,9 +514,37 @@ export default function ChatbotPage() {
                         )}
                     </Card>
 
-                    <Card className="min-h-0 min-w-0 flex-1 rounded-3xl border border-border bg-card shadow-sm md:flex md:h-full md:flex-col md:overflow-hidden">
-                        <CardContent className="min-h-0 space-y-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:pt-4">
+                    <Card className="min-h-0 min-w-0 flex-1 border-0 bg-card/65 shadow-none md:h-full md:overflow-hidden">
+                        <CardContent className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden px-0 pb-0 pt-1 sm:gap-3 sm:px-1 sm:pb-1 sm:pt-2 md:gap-4 md:pt-3">
                             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-label={isHistoryVisible ? 'Sembunyikan riwayat chat' : 'Tampilkan riwayat chat'}
+                                    onClick={() => {
+                                        if (isXlScreen) {
+                                            if (!isHistoryVisible) {
+                                                setIsHistoryVisible(true);
+                                                setIsHistoryCollapsed(false);
+                                                return;
+                                            }
+
+                                            if (showExpandedHistory) {
+                                                setIsHistoryCollapsed(true);
+                                            } else {
+                                                setIsHistoryVisible(false);
+                                            }
+
+                                            return;
+                                        }
+
+                                        setIsHistoryVisible((prev) => !prev);
+                                    }}
+                                    className="h-8 w-8"
+                                >
+                                    {isHistoryVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                                </Button>
                                 <span className="rounded-full border border-border bg-muted/40 px-2 py-1">
                                     Powered by {providerLabel}
                                 </span>
@@ -497,7 +556,7 @@ export default function ChatbotPage() {
                             </div>
                             <div
                                 ref={listRef}
-                                className="min-h-[300px] space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/35 p-3 md:min-h-0 md:flex-1 md:p-4"
+                                className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl border-0 bg-transparent p-0 sm:p-1 md:p-2"
                             >
                                 {messages.map((message) => (
                                     <div
@@ -506,7 +565,7 @@ export default function ChatbotPage() {
                                     >
                                         <div
                                             className={cn(
-                                                'w-fit max-w-full rounded-2xl border px-3 py-2 break-words',
+                                                'w-fit max-w-full rounded-2xl border px-3 py-2 break-words shadow-sm',
                                                 message.role === 'user'
                                                     ? 'max-w-[92%] border-primary/20 bg-primary text-primary-foreground md:max-w-[76%]'
                                                     : 'max-w-[94%] border-border bg-card text-card-foreground md:max-w-[78%] lg:max-w-[72%]',
@@ -540,14 +599,14 @@ export default function ChatbotPage() {
                                 ) : null}
                             </div>
 
-                            <div className="space-y-2 md:sticky md:bottom-0 md:z-10 md:rounded-2xl md:border md:border-border/70 md:bg-card/95 md:p-2 md:backdrop-blur">
-                                <div className="flex flex-wrap gap-2">
+                            <div className="shrink-0 space-y-2 rounded-2xl border-0 bg-transparent p-1 md:z-10">
+                                <div className="flex gap-2 overflow-x-auto pb-1">
                                     {starterPrompts.map((prompt) => (
                                         <Button
                                             key={prompt}
                                             type="button"
                                             variant="outline"
-                                            className="h-auto max-w-full rounded-full border-border/80 bg-muted/40 px-3 py-2 text-left text-xs whitespace-normal hover:bg-muted"
+                                            className="h-auto shrink-0 rounded-full border-border/80 bg-muted/40 px-3 py-2 text-left text-xs whitespace-normal hover:bg-muted"
                                             onClick={() => void sendMessage(prompt)}
                                             disabled={isLoading}
                                         >
@@ -566,13 +625,13 @@ export default function ChatbotPage() {
                                             }
                                         }}
                                         placeholder="Ketik pertanyaan... contoh: pH tanah saya 5.2, apa langkah perbaikannya?"
-                                        className="min-h-[52px] max-h-[140px] flex-1 resize-none bg-card py-3"
+                                        className="min-h-[48px] max-h-[140px] flex-1 resize-none rounded-2xl border-border bg-card py-2.5"
                                         disabled={isLoading}
                                     />
                                     <Button
                                         onClick={() => void sendMessage()}
                                         disabled={!canSubmit}
-                                        className="h-11 min-w-[110px] shrink-0"
+                                        className="h-11 min-w-[88px] shrink-0 rounded-2xl px-4"
                                     >
                                         {isLoading ? (
                                             <LoaderCircle className="h-4 w-4 animate-spin" />
