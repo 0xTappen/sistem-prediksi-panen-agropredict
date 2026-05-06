@@ -50,6 +50,7 @@ class ChatbotController extends Controller
             'conversations' => $conversations,
             'activeConversationId' => $activeConversation?->id,
             'messages' => $messages,
+            'ai' => $this->chatbotService->getActiveProviderMeta(),
         ]);
     }
 
@@ -113,7 +114,7 @@ class ChatbotController extends Controller
             return response()->json([
                 'ok' => true,
                 'reply' => $reply,
-                'provider' => 'gemini',
+                'ai' => $this->chatbotService->getActiveProviderMeta(),
                 'conversation' => [
                     'id' => $conversation->id,
                     'title' => $conversation->title,

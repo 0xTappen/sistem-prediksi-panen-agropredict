@@ -15,13 +15,31 @@ class ChatbotService
      */
     public function ask(string $message, array $history = []): string
     {
-        $provider = mb_strtolower((string) config('services.ai.provider', 'groq'));
+        $provider = $this->activeProvider();
 
         return match ($provider) {
             'groq' => $this->askWithGroq($message, $history),
             'gemini' => $this->askWithGemini($message, $history),
             default => throw new RuntimeException("Provider AI '$provider' tidak didukung."),
         };
+    }
+
+    /**
+     * @return array{provider:string, model:string}
+     */
+    public function getActiveProviderMeta(): array
+    {
+        $provider = $this->activeProvider();
+        $model = match ($provider) {
+            'groq' => (string) config('services.groq.model'),
+            'gemini' => (string) config('services.gemini.model'),
+            default => '',
+        };
+
+        return [
+            'provider' => $provider,
+            'model' => $model,
+        ];
     }
 
     /**
@@ -215,5 +233,10 @@ class ChatbotService
         }
 
         return trim($slice).'...';
+    }
+
+    protected function activeProvider(): string
+    {
+        return mb_strtolower((string) config('services.ai.provider', 'groq'));
     }
 }

@@ -45,6 +45,10 @@ type PageProps = {
     conversations: Conversation[];
     activeConversationId: number | null;
     messages: ServerMessage[];
+    ai?: {
+        provider?: string;
+        model?: string;
+    };
 };
 
 const starterPrompts = [
@@ -106,6 +110,10 @@ export default function ChatbotPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
     const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(true);
+    const [aiMeta, setAiMeta] = useState({
+        provider: page.props.ai?.provider ?? 'ai',
+        model: page.props.ai?.model ?? '',
+    });
     const listRef = useRef<HTMLDivElement | null>(null);
     const sendingRef = useRef(false);
 
@@ -116,6 +124,13 @@ export default function ChatbotPage() {
         const incoming = page.props.messages ?? [];
         setMessages(incoming.length > 0 ? incoming.map(toClientMessage) : [defaultAssistantMessage()]);
     }, [initialConversations, initialActiveConversationId, page.props.messages]);
+
+    useEffect(() => {
+        setAiMeta({
+            provider: page.props.ai?.provider ?? 'ai',
+            model: page.props.ai?.model ?? '',
+        });
+    }, [page.props.ai?.model, page.props.ai?.provider]);
 
     useEffect(() => {
         if (!listRef.current) {
@@ -169,6 +184,10 @@ export default function ChatbotPage() {
                 reply?: string;
                 message?: string;
                 conversation?: Conversation;
+                ai?: {
+                    provider?: string;
+                    model?: string;
+                };
             };
 
             if (!response.ok || !payload.ok || !payload.reply || !payload.conversation) {
@@ -184,6 +203,12 @@ export default function ChatbotPage() {
 
             setMessages((prev) => [...prev, assistantMessage]);
             setActiveConversationId(payload.conversation.id);
+            if (payload.ai?.provider) {
+                setAiMeta({
+                    provider: payload.ai.provider,
+                    model: payload.ai.model ?? '',
+                });
+            }
             setConversations((prev) => {
                 const filtered = prev.filter((item) => item.id !== payload.conversation?.id);
                 return [payload.conversation as Conversation, ...filtered];
@@ -282,20 +307,23 @@ export default function ChatbotPage() {
         }
     };
 
+    const providerLabel = (aiMeta.provider || 'ai').toUpperCase();
+    const modelLabel = aiMeta.model?.trim() ?? '';
+
     return (
         <>
             <Head title="Chatbot AI" />
 
-            <div className="h-[calc(100dvh-72px)] overflow-hidden">
-                <div className="flex h-full flex-col gap-1 overflow-hidden p-1 md:gap-2 md:p-2 xl:flex-row">
+            <div className="h-[calc(100dvh-64px)] overflow-hidden md:h-[calc(100dvh-72px)]">
+                <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden p-2 md:gap-3 md:p-3 xl:flex-row">
                     <Card
                         className={cn(
-                            'rounded-3xl border border-border bg-card shadow-sm md:h-full md:overflow-hidden xl:shrink-0 xl:transition-[width] xl:duration-300',
-                            isHistoryCollapsed ? 'xl:w-[44px]' : 'xl:w-[170px] 2xl:w-[190px]',
+                            'min-h-0 min-w-0 rounded-3xl border border-border bg-card shadow-sm xl:shrink-0 xl:transition-[width] xl:duration-300',
+                            isHistoryCollapsed ? 'xl:w-[56px]' : 'xl:w-[270px] 2xl:w-[300px]',
                         )}
                     >
                         {isHistoryCollapsed ? (
-                            <div className="flex h-full flex-col items-center gap-2 p-2">
+                            <div className="relative z-10 flex h-full min-h-0 flex-col items-center gap-2 p-2">
                                 <Button
                                     variant="outline"
                                     size="icon"
@@ -371,18 +399,18 @@ export default function ChatbotPage() {
                                     </div>
                                     <p className="text-sm text-muted-foreground">Lanjutkan chat sebelumnya kapan pun.</p>
                                 </CardHeader>
-                                <CardContent className="space-y-2 md:h-[calc(100%-7.5rem)] md:overflow-hidden">
+                                <CardContent className="min-h-0 space-y-2 xl:h-[calc(100%-7.5rem)] xl:overflow-hidden">
                                     {conversations.length === 0 ? (
                                         <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                                             Belum ada riwayat. Klik <span className="font-medium text-foreground">Chat Baru</span> untuk mulai.
                                         </div>
                                     ) : (
-                                        <div className="space-y-2 pr-1 md:h-full md:overflow-y-auto">
+                                        <div className="space-y-2 pr-1 xl:h-full xl:overflow-y-auto">
                                             {conversations.map((conversation) => (
                                                 <div
                                                     key={conversation.id}
                                                     className={cn(
-                                                        'group rounded-2xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm',
+                                                        'group min-w-0 overflow-hidden rounded-2xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm',
                                                         activeConversationId === conversation.id
                                                             ? 'border-primary/40 bg-primary/10'
                                                             : 'border-border bg-muted/20 hover:bg-muted/40',
@@ -390,7 +418,7 @@ export default function ChatbotPage() {
                                                 >
                                                     <button
                                                         type="button"
-                                                        className="w-full text-left"
+                                                        className="w-full min-w-0 text-left"
                                                         onClick={() => {
                                                             router.get(
                                                                 '/chatbot',
@@ -428,11 +456,21 @@ export default function ChatbotPage() {
                         )}
                     </Card>
 
-                    <Card className="rounded-3xl border border-border bg-card shadow-sm md:flex md:h-full md:flex-1 md:flex-col md:overflow-hidden">
-                        <CardContent className="space-y-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:pt-4">
+                    <Card className="min-h-0 min-w-0 rounded-3xl border border-border bg-card shadow-sm md:flex md:h-full md:flex-1 md:flex-col md:overflow-hidden">
+                        <CardContent className="min-h-0 space-y-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:pt-4">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                <span className="rounded-full border border-border bg-muted/40 px-2 py-1">
+                                    Powered by {providerLabel}
+                                </span>
+                                {modelLabel !== '' ? (
+                                    <span className="rounded-full border border-border bg-muted/20 px-2 py-1">
+                                        {modelLabel}
+                                    </span>
+                                ) : null}
+                            </div>
                             <div
                                 ref={listRef}
-                                className="min-h-[320px] space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/35 p-3 md:min-h-0 md:flex-1 md:p-4"
+                                className="min-h-[300px] space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/35 p-3 md:min-h-0 md:flex-1 md:p-4"
                             >
                                 {messages.map((message) => (
                                     <div
@@ -441,7 +479,7 @@ export default function ChatbotPage() {
                                     >
                                         <div
                                             className={cn(
-                                                'rounded-2xl border px-3 py-2 break-words',
+                                                'w-fit max-w-full rounded-2xl border px-3 py-2 break-words',
                                                 message.role === 'user'
                                                     ? 'max-w-[92%] border-primary/20 bg-primary text-primary-foreground md:max-w-[76%]'
                                                     : 'max-w-[94%] border-border bg-card text-card-foreground md:max-w-[78%] lg:max-w-[72%]',
