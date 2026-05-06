@@ -37,8 +37,24 @@ return [
 
     'weather' => [
         'api_key' => env('WEATHER_API_KEY'),
-        'base_url' => env('WEATHER_API_BASE_URL'),
+        'base_url' => env('WEATHER_API_BASE_URL', 'https://api.bmkg.go.id/publik/prakiraan-cuaca'),
         'mock' => env('WEATHER_API_MOCK', true),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'base_url' => env('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta/models'),
+    ],
+
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_MODEL', 'llama-3.1-8b-instant'),
+        'base_url' => env('GROQ_API_BASE_URL', 'https://api.groq.com/openai/v1'),
+    ],
+
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'groq'),
     ],
 
 ];

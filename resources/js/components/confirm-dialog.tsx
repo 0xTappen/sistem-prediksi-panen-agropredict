@@ -29,18 +29,19 @@ export default function ConfirmDialog({
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="rounded-2xl border border-border bg-card">
+            <DialogContent className="rounded-3xl border border-border/80 bg-card shadow-md sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
+                    <DialogDescription className="leading-6">{description}</DialogDescription>
                 </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                <DialogFooter className="gap-2 sm:justify-end">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="sm:min-w-24">
                         {cancelLabel}
                     </Button>
                     <Button
                         variant={destructive ? 'destructive' : 'default'}
                         onClick={onConfirm}
+                        className="sm:min-w-24"
                     >
                         {confirmLabel}
                     </Button>

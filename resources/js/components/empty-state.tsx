@@ -16,15 +16,15 @@ export default function EmptyState({
     icon?: LucideIcon;
 }) {
     return (
-        <Card className="rounded-2xl border border-dashed border-border bg-card">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+        <Card className="rounded-3xl border border-dashed border-border/90 bg-card">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center md:py-14">
                 {Icon ? (
-                    <div className="mb-4 rounded-2xl bg-muted p-3 text-primary">
+                    <div className="mb-4 rounded-2xl border border-border/70 bg-muted p-3 text-primary">
                         <Icon className="h-6 w-6" />
                     </div>
                 ) : null}
-                <h3 className="text-lg font-medium text-foreground">{title}</h3>
-                <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+                <p className="mt-1.5 max-w-xl text-sm leading-6 text-muted-foreground">
                     {description}
                 </p>
                 {actionLabel && onAction ? (

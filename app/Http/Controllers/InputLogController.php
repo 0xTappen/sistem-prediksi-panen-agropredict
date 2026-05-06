@@ -26,18 +26,26 @@ class InputLogController extends Controller
         $selectedProject = null;
         $weatherData = null;
         $weatherError = null;
+        $locationOverride = trim((string) $request->query('location_override', ''));
+        $weatherLocationUsed = null;
 
         if ($request->filled('project_id')) {
             $selectedProject = Project::query()
                 ->where('user_id', $request->user()->id)
                 ->find($request->integer('project_id'));
+        }
 
-            if ($selectedProject) {
-                try {
-                    $weatherData = $this->weatherService->getWeatherByLocation($selectedProject->lokasi);
-                } catch (\Throwable $exception) {
-                    $weatherError = $exception->getMessage();
-                }
+        if ($locationOverride !== '') {
+            $weatherLocationUsed = $locationOverride;
+        } elseif ($selectedProject) {
+            $weatherLocationUsed = $selectedProject->lokasi;
+        }
+
+        if ($weatherLocationUsed !== null) {
+            try {
+                $weatherData = $this->weatherService->getWeatherByLocation($weatherLocationUsed);
+            } catch (\Throwable $exception) {
+                $weatherError = $exception->getMessage();
             }
         }
 
@@ -46,6 +54,8 @@ class InputLogController extends Controller
             'selectedProject' => $selectedProject,
             'weatherData' => $weatherData,
             'weatherError' => $weatherError,
+            'weatherLocationUsed' => $weatherLocationUsed,
+            'locationOverride' => $locationOverride,
         ]);
     }
 

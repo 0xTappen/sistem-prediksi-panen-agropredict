@@ -93,7 +93,7 @@
     --chart-3: #2563eb;
     --chart-4: #a7c957;
 
-    --radius: 1rem;
+    --radius: 1.1rem;
 
     --sidebar: #2f6b3f;
     --sidebar-foreground: #f7f8ef;
@@ -150,12 +150,20 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     * {
         @apply border-border;
     }
 
     body {
         @apply bg-background text-foreground antialiased;
+        background-image:
+            radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--secondary) 16%, transparent) 0, transparent 36%),
+            radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--accent) 10%, transparent) 0, transparent 28%);
+        background-attachment: fixed;
     }
 
     button,
@@ -164,5 +172,52 @@
     textarea,
     select {
         @apply rounded-2xl;
+    }
+
+    ::selection {
+        background-color: color-mix(in oklab, var(--primary) 28%, white);
+        color: var(--foreground);
+    }
+}
+
+@layer components {
+    .app-surface {
+        @apply rounded-3xl border border-border/80 bg-card shadow-sm;
+    }
+
+    .glass-header {
+        @apply border-b border-border/70 bg-card/80 backdrop-blur-xl;
+    }
+
+    .soft-hover {
+        @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .reveal-up {
+        animation: reveal-up 360ms ease-out both;
+    }
+
+    .reveal-fade {
+        animation: reveal-fade 280ms ease-out both;
+    }
+}
+
+@keyframes reveal-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes reveal-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }

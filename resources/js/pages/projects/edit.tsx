@@ -71,7 +71,12 @@ export default function ProjectEdit({ project }: { project: Project }) {
                                     id="lokasi"
                                     value={data.lokasi}
                                     onChange={(e) => setData('lokasi', e.target.value)}
+                                    placeholder="Contoh: Bandung atau 31.71.03.1001 - Kemayoran"
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Boleh isi nama lokasi biasa. Agar lebih akurat untuk BMKG, bisa sertakan kode ADM4
+                                    (format: <span className="font-medium">31.71.03.1001</span>).
+                                </p>
                                 <InputError message={errors.lokasi} />
                             </div>
                         </div>

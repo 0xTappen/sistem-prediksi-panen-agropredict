@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CloudSun, Droplets, FlaskConical, Sprout } from 'lucide-react';
+import { CloudSun, Droplets, FlaskConical, MapPin, Sprout } from 'lucide-react';
 import { useEffect } from 'react';
 import type { ComponentType } from 'react';
 import FormSection from '@/components/form-section';
@@ -32,11 +32,15 @@ export default function InputCreate({
     selectedProject,
     weatherData,
     weatherError,
+    weatherLocationUsed,
+    locationOverride,
 }: {
     projects: Project[];
     selectedProject: Project | null;
     weatherData: WeatherData;
     weatherError: string | null;
+    weatherLocationUsed: string | null;
+    locationOverride: string;
 }) {
     const { data, setData, post, processing, errors } = useForm({
         project_id: selectedProject?.id?.toString() ?? '',
@@ -50,6 +54,7 @@ export default function InputCreate({
         kelembapan_udara: weatherData?.kelembapan_udara?.toString() ?? '',
         curah_hujan: weatherData?.curah_hujan?.toString() ?? '',
         sumber_cuaca: weatherData?.sumber_cuaca ?? (weatherData ? 'api' : 'manual'),
+        lokasi_cuaca: locationOverride || selectedProject?.lokasi || '',
         catatan: '',
     });
 
@@ -67,6 +72,10 @@ export default function InputCreate({
         }));
     }, [setData, weatherData]);
 
+    useEffect(() => {
+        setData('lokasi_cuaca', locationOverride || selectedProject?.lokasi || '');
+    }, [locationOverride, selectedProject?.id, selectedProject?.lokasi, setData]);
+
     const handleProjectChange = (value: string) => {
         setData('project_id', value);
 
@@ -80,6 +89,28 @@ export default function InputCreate({
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/inputs');
+    };
+
+    const fetchWeatherByLocation = () => {
+        if (data.lokasi_cuaca.trim().length === 0) {
+            return;
+        }
+
+        const query: Record<string, string> = {
+            location_override: data.lokasi_cuaca,
+        };
+
+        if (data.project_id) {
+            query.project_id = data.project_id;
+        }
+
+        router.get('/inputs/create', {
+            ...query,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
     };
 
     return (
@@ -150,7 +181,8 @@ export default function InputCreate({
                                     <CloudSun className="h-4 w-4" /> Cuaca dari API tersedia
                                 </AlertTitle>
                                 <AlertDescription>
-                                    Nilai suhu, kelembapan udara, dan curah hujan terisi otomatis.
+                                    Nilai suhu, kelembapan udara, dan curah hujan terisi otomatis dari API.
+                                    {weatherLocationUsed ? ` Lokasi dipakai: ${weatherLocationUsed}.` : ''}
                                 </AlertDescription>
                             </Alert>
                         ) : null}
@@ -161,6 +193,35 @@ export default function InputCreate({
                                 <AlertDescription>{weatherError}. Silakan isi data cuaca manual.</AlertDescription>
                             </Alert>
                         ) : null}
+
+                        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+                            <div className="grid gap-2">
+                                <Label htmlFor="lokasi_cuaca" className="inline-flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-primary" />
+                                    Lokasi Cuaca
+                                </Label>
+                                <Input
+                                    id="lokasi_cuaca"
+                                    value={data.lokasi_cuaca}
+                                    onChange={(e) => setData('lokasi_cuaca', e.target.value)}
+                                    placeholder="Contoh: Bandung atau 31.71.03.1001 - Kemayoran"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Boleh isi nama lokasi biasa. Jika ada kode ADM4 BMKG, hasil biasanya lebih akurat.
+                                    Data cuaca bisa diambil meski proyek belum dipilih.
+                                </p>
+                            </div>
+                            <div className="flex items-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={fetchWeatherByLocation}
+                                    disabled={data.lokasi_cuaca.trim().length === 0}
+                                >
+                                    Ambil Cuaca API
+                                </Button>
+                            </div>
+                        </div>
 
                         <div className="grid gap-4 md:grid-cols-3">
                             <Field id="suhu" label="Suhu (°C)" value={data.suhu} onChange={(value) => setData('suhu', value)} error={errors.suhu} icon={CloudSun} />

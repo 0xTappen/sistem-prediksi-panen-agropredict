@@ -44,9 +44,9 @@ class DemoDataSeeder extends Seeder
         );
 
         $projects = collect([
-            ['nama_tanaman' => 'Padi Ciherang', 'jenis_tanaman' => 'Padi', 'luas_lahan' => 2.5, 'lokasi' => 'Karawang'],
-            ['nama_tanaman' => 'Jagung Hibrida', 'jenis_tanaman' => 'Jagung', 'luas_lahan' => 1.8, 'lokasi' => 'Lampung'],
-            ['nama_tanaman' => 'Cabai Merah', 'jenis_tanaman' => 'Cabai', 'luas_lahan' => 0.9, 'lokasi' => 'Bandung'],
+            ['nama_tanaman' => 'Padi Ciherang', 'jenis_tanaman' => 'Padi', 'luas_lahan' => 2.5, 'lokasi' => '31.71.03.1001 - Kemayoran, Jakarta'],
+            ['nama_tanaman' => 'Jagung Hibrida', 'jenis_tanaman' => 'Jagung', 'luas_lahan' => 1.8, 'lokasi' => '31.71.01.1001 - Gambir, Jakarta'],
+            ['nama_tanaman' => 'Cabai Merah', 'jenis_tanaman' => 'Cabai', 'luas_lahan' => 0.9, 'lokasi' => '12.75.03.1005 - Suka Maju, Binjai'],
         ])->map(fn (array $projectData): Project => Project::query()->updateOrCreate(
             [
                 'user_id' => $user->id,

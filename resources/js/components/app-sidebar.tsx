@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     BarChart3,
+    Bot,
     CloudSun,
     History,
     Leaf,
@@ -40,13 +41,18 @@ const mainNavItems: NavItem[] = [
         icon: CloudSun,
     },
     {
+        title: 'Chatbot AI',
+        href: '/chatbot',
+        icon: Bot,
+    },
+    {
         title: 'Hasil Prediksi',
-        href: '/histories',
+        href: '/histories?menu=hasil',
         icon: BarChart3,
     },
     {
         title: 'Riwayat',
-        href: '/histories',
+        href: '/histories?menu=riwayat',
         icon: History,
     },
     {
@@ -56,18 +62,18 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Rekomendasi',
-        href: '/histories',
+        href: '/histories?menu=rekomendasi',
         icon: Sparkles,
     },
 ];
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border/80">
-            <SidebarHeader className="pt-3">
+        <Sidebar collapsible="offcanvas" variant="sidebar">
+            <SidebarHeader className="pt-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="rounded-2xl">
+                        <SidebarMenuButton size="lg" asChild className="rounded-2xl px-3">
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -76,11 +82,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="px-1 pb-2">
                 <SidebarNav items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter className="border-t border-sidebar-border/50 pt-3">
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

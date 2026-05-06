@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Download, Eye, Filter, History, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmDialog from '@/components/confirm-dialog';
@@ -39,6 +39,9 @@ export default function HistoryIndex({
     histories: Paginated<HistoryListItem>;
     filters: { q: string; status: string };
 }) {
+    const page = usePage();
+    const params = new URLSearchParams(page.url.split('?')[1] ?? '');
+    const menu = params.get('menu') ?? '';
     const [deleteTarget, setDeleteTarget] = useState<HistoryListItem | null>(null);
     const [search, setSearch] = useState(filters.q ?? '');
     const [status, setStatus] = useState(filters.status || 'all');
@@ -58,6 +61,7 @@ export default function HistoryIndex({
         router.get(
             '/histories',
             {
+                menu,
                 q: search,
                 status: status === 'all' ? '' : status,
             },
@@ -93,6 +97,7 @@ export default function HistoryIndex({
                                     router.get(
                                         '/histories',
                                         {
+                                            menu,
                                             q: search,
                                             status: value === 'all' ? '' : value,
                                         },
