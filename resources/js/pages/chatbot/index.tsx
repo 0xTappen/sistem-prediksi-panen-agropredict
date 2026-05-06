@@ -112,6 +112,7 @@ export default function ChatbotPage() {
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
     const [isDeletingConversation, setIsDeletingConversation] = useState(false);
     const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(true);
+    const [isXlScreen, setIsXlScreen] = useState(false);
     const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
     const [aiMeta, setAiMeta] = useState({
         provider: page.props.ai?.provider ?? 'ai',
@@ -142,6 +143,18 @@ export default function ChatbotPage() {
 
         listRef.current.scrollTop = listRef.current.scrollHeight;
     }, [messages, isLoading]);
+
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 1280px)');
+        const onChange = (event: MediaQueryListEvent) => setIsXlScreen(event.matches);
+
+        setIsXlScreen(media.matches);
+        media.addEventListener('change', onChange);
+
+        return () => {
+            media.removeEventListener('change', onChange);
+        };
+    }, []);
 
     const canSubmit = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
 
@@ -322,25 +335,26 @@ export default function ChatbotPage() {
 
     const providerLabel = (aiMeta.provider || 'ai').toUpperCase();
     const modelLabel = aiMeta.model?.trim() ?? '';
+    const showExpandedHistory = isXlScreen && !isHistoryCollapsed;
 
     return (
         <>
             <Head title="Chatbot AI" />
 
             <div className="h-[calc(100dvh-64px)] overflow-hidden md:h-[calc(100dvh-72px)]">
-                <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden p-2 md:gap-3 md:p-3 xl:flex-row">
+                <div className="flex h-full min-h-0 flex-row gap-2 overflow-hidden p-2 md:gap-3 md:p-3">
                     <Card
                         className={cn(
-                            'min-h-0 min-w-0 rounded-3xl border border-border bg-card shadow-sm xl:shrink-0 xl:transition-[width] xl:duration-300',
-                            isHistoryCollapsed ? 'xl:w-[56px]' : 'xl:w-[270px] 2xl:w-[300px]',
+                            'min-h-0 shrink-0 rounded-3xl border border-border bg-card shadow-sm xl:h-full xl:transition-[width] xl:duration-300',
+                            showExpandedHistory ? 'xl:w-[270px] 2xl:w-[300px]' : 'w-[72px] sm:w-[76px] xl:w-[56px]',
                         )}
                     >
-                        {isHistoryCollapsed ? (
+                        {!showExpandedHistory ? (
                             <div className="relative z-10 flex h-full min-h-0 flex-col items-center gap-2 p-2">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    onClick={() => setIsHistoryCollapsed(false)}
+                                    onClick={() => isXlScreen && setIsHistoryCollapsed(false)}
                                     aria-label="Perbesar panel riwayat"
                                     className="h-9 w-9"
                                 >
@@ -374,7 +388,7 @@ export default function ChatbotPage() {
                                                 );
                                             }}
                                             className={cn(
-                                                'flex h-7 w-7 items-center justify-center rounded-full border text-[11px] transition-colors',
+                                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11px] transition-colors',
                                                 activeConversationId === conversation.id
                                                     ? 'border-primary/40 bg-primary/15 text-primary'
                                                     : 'border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/40',
@@ -469,7 +483,7 @@ export default function ChatbotPage() {
                         )}
                     </Card>
 
-                    <Card className="min-h-0 min-w-0 rounded-3xl border border-border bg-card shadow-sm md:flex md:h-full md:flex-1 md:flex-col md:overflow-hidden">
+                    <Card className="min-h-0 min-w-0 flex-1 rounded-3xl border border-border bg-card shadow-sm md:flex md:h-full md:flex-col md:overflow-hidden">
                         <CardContent className="min-h-0 space-y-4 pt-3 md:flex md:flex-1 md:flex-col md:overflow-hidden md:pt-4">
                             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                 <span className="rounded-full border border-border bg-muted/40 px-2 py-1">
@@ -533,7 +547,7 @@ export default function ChatbotPage() {
                                             key={prompt}
                                             type="button"
                                             variant="outline"
-                                            className="rounded-full border-border/80 bg-muted/40 text-xs hover:bg-muted"
+                                            className="h-auto max-w-full rounded-full border-border/80 bg-muted/40 px-3 py-2 text-left text-xs whitespace-normal hover:bg-muted"
                                             onClick={() => void sendMessage(prompt)}
                                             disabled={isLoading}
                                         >

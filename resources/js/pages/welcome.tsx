@@ -204,25 +204,24 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                                 <a href="#faq" className="text-muted-foreground" onClick={() => setMobileOpen(false)}>FAQ</a>
                             </div>
 
-                            <div className="mt-4 flex gap-2">
+                            <div className="mt-4 space-y-2">
                                 <ThemeToggle appearance={appearance} onChange={updateAppearance} compact />
 
-                                {!isLoggedIn && (
-                                    <Button asChild variant="outline" className="flex-1">
-                                        <Link href={login()} onClick={() => setMobileOpen(false)}>Login</Link>
-                                    </Button>
-                                )}
-
                                 {isLoggedIn ? (
-                                    <Button asChild className="flex-1">
+                                    <Button asChild className="w-full">
                                         <Link href={dashboard()} onClick={() => setMobileOpen(false)}>Masuk Dashboard</Link>
                                     </Button>
                                 ) : (
-                                    canRegister && (
-                                        <Button asChild className="flex-1">
-                                            <Link href={register()} onClick={() => setMobileOpen(false)}>Daftar</Link>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button asChild variant="outline" className="w-full">
+                                            <Link href={login()} onClick={() => setMobileOpen(false)}>Login</Link>
                                         </Button>
-                                    )
+                                        {canRegister ? (
+                                            <Button asChild className="w-full">
+                                                <Link href={register()} onClick={() => setMobileOpen(false)}>Daftar</Link>
+                                            </Button>
+                                        ) : null}
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -518,14 +517,14 @@ function ThemeToggle({
     ];
 
     return (
-        <div className={cn('inline-flex items-center rounded-2xl border border-border bg-muted/60 p-1', compact && 'flex-1 justify-between')}>
+        <div className={cn('inline-flex items-center rounded-2xl border border-border bg-muted/60 p-1', compact && 'w-full justify-between overflow-x-auto')}>
             {options.map((option) => (
                 <Button
                     key={option.mode}
                     type="button"
                     size="sm"
                     variant={appearance === option.mode ? 'default' : 'ghost'}
-                    className={cn('h-8 gap-1.5 rounded-xl px-2.5 text-xs', compact && 'flex-1')}
+                    className={cn('h-8 gap-1.5 rounded-xl px-2.5 text-xs', compact && 'min-w-[88px] flex-1')}
                     onClick={() => onChange(option.mode)}
                 >
                     <option.icon className="h-3.5 w-3.5" />
