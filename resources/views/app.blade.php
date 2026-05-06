@@ -26,8 +26,10 @@
             html.dark { background-color: #111A12; }
         </style>
 
-        <link rel="icon" href="/brand/logo.png" type="image/png">
-        <link rel="apple-touch-icon" href="/brand/logo.png">
+        <link rel="icon" type="image/png" href="/brand/logo.png?v={{ @filemtime(public_path('brand/logo.png')) }}">
+        <link rel="shortcut icon" type="image/png" href="/brand/logo.png?v={{ @filemtime(public_path('brand/logo.png')) }}">
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg?v={{ @filemtime(public_path('favicon.svg')) }}">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v={{ @filemtime(public_path('apple-touch-icon.png')) }}">
 
         @fonts
 

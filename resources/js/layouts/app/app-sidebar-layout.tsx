@@ -16,14 +16,14 @@ export default function AppSidebarLayout({
     return (
         <AppShell variant="sidebar">
             <AppSidebar />
-            <AppContent variant="sidebar" className="overflow-x-hidden">
+            <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 <div
                     className={cn(
-                        'reveal-up mx-auto w-full px-4 pb-6 pt-4 md:px-6 md:pb-8 md:pt-6',
+                        'reveal-up mx-auto w-full min-w-0 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8',
                         isChatbotPage
-                            ? 'max-w-none px-0 pb-0 pt-0 md:px-0 md:pb-0 md:pt-0 xl:px-0'
-                            : 'max-w-screen-2xl xl:px-8',
+                            ? 'max-w-none px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4'
+                            : 'max-w-screen-2xl',
                     )}
                 >
                     {children}

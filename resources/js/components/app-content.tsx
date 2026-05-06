@@ -13,7 +13,7 @@ export function AppContent({ variant = 'sidebar', children, ...props }: Props) {
 
         return (
             <SidebarInset
-                className={cn('md:ml-0', className)}
+                className={cn('min-w-0 flex-1 overflow-x-clip md:ml-0', className)}
                 {...rest}
             >
                 {children}
@@ -23,7 +23,7 @@ export function AppContent({ variant = 'sidebar', children, ...props }: Props) {
 
     return (
         <main
-            className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-5 rounded-2xl p-4 md:p-6"
+            className="mx-auto flex h-full w-full min-w-0 max-w-7xl flex-1 flex-col gap-5 rounded-2xl p-4 sm:p-6 lg:p-8"
             {...props}
         >
             {children}

@@ -152,6 +152,7 @@
 @layer base {
     html {
         scroll-behavior: smooth;
+        overflow-x: hidden;
     }
 
     * {
@@ -160,10 +161,25 @@
 
     body {
         @apply bg-background text-foreground antialiased;
+        overflow-x: hidden;
         background-image:
             radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--secondary) 16%, transparent) 0, transparent 36%),
             radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--accent) 10%, transparent) 0, transparent 28%);
         background-attachment: fixed;
+    }
+
+    #app,
+    [data-slot='sidebar-wrapper'],
+    [data-slot='sidebar-inset'] {
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    img,
+    video,
+    canvas {
+        max-width: 100%;
+        height: auto;
     }
 
     button,
@@ -199,6 +215,10 @@
 
     .reveal-fade {
         animation: reveal-fade 280ms ease-out both;
+    }
+
+    .table-scroll-wrap {
+        @apply w-full overflow-x-auto rounded-2xl border border-border/80;
     }
 }
 

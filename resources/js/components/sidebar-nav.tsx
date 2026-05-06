@@ -36,9 +36,9 @@ export default function SidebarNav({ items }: { items: NavItem[] }) {
                             className="rounded-2xl px-3 transition-all duration-200 hover:-translate-y-0.5"
                             tooltip={item.title}
                         >
-                            <Link href={item.href} prefetch>
-                                {item.icon ? <item.icon className="h-4 w-4" /> : null}
-                                <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                            <Link href={item.href} prefetch className="min-w-0">
+                                {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
+                                <span className="truncate group-data-[collapsible=icon]:hidden">{item.title}</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
