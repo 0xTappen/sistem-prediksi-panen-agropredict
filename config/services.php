@@ -57,4 +57,11 @@ return [
         'provider' => env('AI_PROVIDER', 'groq'),
     ],
 
+    'nominatim' => [
+        'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'sistem-prediksi-panen/1.0 (dev@localhost)'),
+        'contact_email' => env('NOMINATIM_CONTACT_EMAIL'),
+        'country_codes' => env('NOMINATIM_COUNTRY_CODES', 'id'),
+    ],
+
 ];

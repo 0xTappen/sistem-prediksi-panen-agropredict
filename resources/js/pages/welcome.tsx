@@ -63,8 +63,8 @@ const fitur = [
     },
     {
         icon: CloudSun,
-        title: 'Integrasi Weather API',
-        description: 'Ambil data suhu, kelembapan, dan curah hujan otomatis.',
+        title: 'Integrasi Data BMKG',
+        description: 'Ambil data suhu, kelembapan, dan curah hujan otomatis dari BMKG.',
     },
     {
         icon: BarChart3,
@@ -107,8 +107,8 @@ const faqItems: FaqItem[] = [
         answer: 'Untuk tahap demo dan development, aplikasi dapat digunakan tanpa biaya lisensi tambahan.',
     },
     {
-        question: 'Apakah bisa digunakan tanpa Weather API?',
-        answer: 'Bisa. Jika Weather API gagal, Anda tetap dapat mengisi data cuaca secara manual.',
+        question: 'Apakah bisa digunakan tanpa API BMKG?',
+        answer: 'Bisa. Jika data BMKG gagal diambil, Anda tetap dapat mengisi data cuaca secara manual.',
     },
     {
         question: 'Apakah data disimpan?',

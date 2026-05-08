@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InputLogController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\PredictionHistoryController;
 use App\Http\Controllers\ProjectController;
@@ -27,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('chatbot/ask', [ChatbotController::class, 'ask'])->name('chatbot.ask');
     Route::post('chatbot/conversations', [ChatbotController::class, 'createConversation'])->name('chatbot.conversations.store');
     Route::delete('chatbot/conversations/{conversation}', [ChatbotController::class, 'destroyConversation'])->name('chatbot.conversations.destroy');
+    Route::get('locations/search', [LocationController::class, 'search'])->name('locations.search');
 
     Route::resource('projects', ProjectController::class);
 
