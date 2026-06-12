@@ -77,7 +77,7 @@ class WeatherService
             throw new RuntimeException('Konfigurasi WEATHER_API_BASE_URL belum diatur.');
         }
 
-        $response = Http::timeout(8)->acceptJson()->get($baseUrl, ['adm4' => $adm4]);
+        $response = Http::timeout(8)->withOptions([\CURLOPT_IPRESOLVE => \CURL_IPRESOLVE_V4])->acceptJson()->get($baseUrl, ['adm4' => $adm4]);
 
         if ($response->failed()) {
             throw new RuntimeException('Gagal mengambil data cuaca dari API BMKG.');
@@ -127,7 +127,7 @@ class WeatherService
      */
     protected function getWeatherFromOpenMeteoByCoordinates(float $latitude, float $longitude): array
     {
-        $forecastResponse = Http::timeout(8)->acceptJson()->get(self::OPEN_METEO_FORECAST_URL, [
+        $forecastResponse = Http::timeout(8)->withOptions([\CURLOPT_IPRESOLVE => \CURL_IPRESOLVE_V4])->acceptJson()->get(self::OPEN_METEO_FORECAST_URL, [
             'latitude' => $latitude,
             'longitude' => $longitude,
             'current' => 'temperature_2m,relative_humidity_2m,precipitation',
@@ -183,7 +183,7 @@ class WeatherService
      */
     protected function geocodeWithOpenMeteo(string $location): ?array
     {
-        $geoResponse = Http::timeout(8)->acceptJson()->get(self::OPEN_METEO_GEOCODING_URL, [
+        $geoResponse = Http::timeout(8)->withOptions([\CURLOPT_IPRESOLVE => \CURL_IPRESOLVE_V4])->acceptJson()->get(self::OPEN_METEO_GEOCODING_URL, [
             'name' => $location,
             'count' => 1,
             'language' => 'id',
@@ -239,6 +239,7 @@ class WeatherService
         }
 
         $response = Http::timeout(8)
+            ->withOptions([\CURLOPT_IPRESOLVE => \CURL_IPRESOLVE_V4])
             ->acceptJson()
             ->withHeaders([
                 'User-Agent' => $userAgent,
