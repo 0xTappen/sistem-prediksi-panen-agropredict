@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Leaf, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Leaf, Pencil, Plus, Search, Trash2, Eye } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmDialog from '@/components/confirm-dialog';
 import EmptyState from '@/components/empty-state';
@@ -128,6 +128,11 @@ export default function ProjectIndex({
                                                 <TableCell className="pr-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <Button size="icon" variant="outline" asChild>
+                                                            <Link href={`/projects/${project.id}`}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                        <Button size="icon" variant="outline" asChild>
                                                             <Link href={`/projects/${project.id}/edit`}>
                                                                 <Pencil className="h-4 w-4" />
                                                             </Link>
@@ -171,6 +176,11 @@ export default function ProjectIndex({
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
+                                            <Button size="sm" variant="outline" asChild>
+                                                <Link href={`/projects/${project.id}`}>
+                                                    <Eye className="h-4 w-4" /> Lihat
+                                                </Link>
+                                            </Button>
                                             <Button size="sm" variant="outline" asChild>
                                                 <Link href={`/projects/${project.id}/edit`}>
                                                     <Pencil className="h-4 w-4" /> Edit
