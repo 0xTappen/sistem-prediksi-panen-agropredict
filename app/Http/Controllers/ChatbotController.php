@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Models\PredictionHistory;
 use App\Models\Project;
 use App\Services\ChatbotService;
+use App\Services\SpeechToTextService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,8 +17,10 @@ use Inertia\Response;
 
 class ChatbotController extends Controller
 {
-    public function __construct(protected ChatbotService $chatbotService)
-    {
+    public function __construct(
+        protected ChatbotService $chatbotService,
+        protected SpeechToTextService $speechToTextService,
+    ) {
     }
 
     public function index(): Response
@@ -157,6 +160,30 @@ class ChatbotController extends Controller
         return response()->json([
             'ok' => true,
         ]);
+    }
+
+    public function transcribe(Request $request): JsonResponse
+    {
+        $request->validate([
+            'audio' => ['required', 'file', 'max:10240'],
+        ], [
+            'audio.required' => 'File audio wajib dikirim.',
+            'audio.max' => 'Ukuran audio maksimal 10MB.',
+        ]);
+
+        try {
+            $text = $this->speechToTextService->transcribe($request->file('audio'));
+
+            return response()->json([
+                'ok' => true,
+                'text' => $text,
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'ok' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
     }
 
     protected function makeTitle(string $message): string

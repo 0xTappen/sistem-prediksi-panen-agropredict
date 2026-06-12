@@ -122,48 +122,81 @@ export default function ChatbotPage() {
         model: page.props.ai?.model ?? '',
     });
     const [isListening, setIsListening] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
     const sendingRef = useRef(false);
-    const recognitionRef = useRef<any>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
-    useEffect(() => {
-        // @ts-ignore
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = false;
-            recognitionRef.current.interimResults = true;
-            recognitionRef.current.lang = 'id-ID';
-
-            recognitionRef.current.onresult = (event: any) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (finalTranscript) {
-                    setInput((prev) => prev + (prev ? ' ' : '') + finalTranscript);
-                }
-            };
-
-            recognitionRef.current.onend = () => setIsListening(false);
-            recognitionRef.current.onerror = () => setIsListening(false);
-        }
-    }, []);
-
-    const toggleListening = () => {
-        if (!recognitionRef.current) {
-            toast.error('Browser Anda tidak mendukung fitur pengenalan suara.');
+    const toggleListening = async () => {
+        if (isListening) {
+            // Stop recording
+            mediaRecorderRef.current?.stop();
             return;
         }
 
-        if (isListening) {
-            recognitionRef.current.stop();
-        } else {
-            recognitionRef.current.start();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            audioChunksRef.current = [];
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                stream.getTracks().forEach((track) => track.stop());
+                setIsListening(false);
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                if (audioBlob.size < 100) {
+                    toast.error('Audio terlalu pendek. Coba bicara lebih lama.');
+                    return;
+                }
+
+                setIsTranscribing(true);
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.webm');
+
+                    const response = await fetch('/chatbot/transcribe', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: formData,
+                    });
+
+                    const payload = (await response.json()) as {
+                        ok?: boolean;
+                        text?: string;
+                        message?: string;
+                    };
+
+                    if (!response.ok || !payload.ok || !payload.text) {
+                        throw new Error(payload.message ?? 'Gagal transkripsi audio.');
+                    }
+
+                    setInput((prev) => prev + (prev ? ' ' : '') + payload.text);
+                    toast.success('Transkripsi berhasil!');
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : 'Gagal transkripsi audio.';
+                    toast.error(message);
+                } finally {
+                    setIsTranscribing(false);
+                }
+            };
+
+            mediaRecorder.start();
             setIsListening(true);
-            toast.info('Mendengarkan... Silakan bicara.');
+            toast.info('Merekam... Klik lagi untuk berhenti.');
+        } catch {
+            toast.error('Tidak dapat mengakses mikrofon. Pastikan izin diberikan.');
         }
     };
 
@@ -710,11 +743,22 @@ export default function ChatbotPage() {
                                         type="button"
                                         variant="outline"
                                         size="icon"
-                                        className={cn("h-11 w-11 shrink-0 rounded-2xl", isListening && "border-destructive bg-destructive/10 text-destructive animate-pulse")}
-                                        onClick={toggleListening}
-                                        aria-label={isListening ? "Berhenti mendengarkan" : "Mulai mendengarkan"}
+                                        className={cn(
+                                            "h-11 w-11 shrink-0 rounded-2xl",
+                                            isListening && "border-destructive bg-destructive/10 text-destructive animate-pulse",
+                                            isTranscribing && "border-primary bg-primary/10 text-primary",
+                                        )}
+                                        onClick={() => void toggleListening()}
+                                        disabled={isTranscribing || isLoading}
+                                        aria-label={isListening ? "Berhenti merekam" : isTranscribing ? "Sedang transkripsi..." : "Mulai merekam suara"}
                                     >
-                                        {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                        {isTranscribing ? (
+                                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                                        ) : isListening ? (
+                                            <MicOff className="h-4 w-4" />
+                                        ) : (
+                                            <Mic className="h-4 w-4" />
+                                        )}
                                     </Button>
                                     <Button
                                         onClick={() => void sendMessage()}
