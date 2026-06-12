@@ -35,8 +35,15 @@ it('RecommendationService menghasilkan rekomendasi', function () {
         'pengendalian_hama',
         'catatan_risiko',
         'ringkasan_status',
+        'insight_model',
+        'confidence_label',
+        'prioritas_ai',
+        'faktor_paling_berpengaruh',
+        'simulasi_perbaikan',
+        'evaluasi_model',
     ]);
 
     expect($recommendation['tips_perawatan'])->toBeArray();
     expect($recommendation['pupuk_disarankan'])->toBeString();
+    expect($recommendation['prioritas_ai'])->toBeArray();
 });

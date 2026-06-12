@@ -12,20 +12,39 @@ class LegacyPredictionBaselineService
      */
     public function predict(Project $project, InputLog $inputLog): array
     {
+        return $this->predictScenario($project->jenis_tanaman, $project->luas_lahan, [
+            'nitrogen' => $inputLog->nitrogen,
+            'phosphorus' => $inputLog->phosphorus,
+            'potassium' => $inputLog->potassium,
+            'ph_tanah' => $inputLog->ph_tanah,
+            'kelembapan_tanah' => $inputLog->kelembapan_tanah,
+            'jumlah_air' => $inputLog->jumlah_air,
+            'suhu' => $inputLog->suhu,
+            'kelembapan_udara' => $inputLog->kelembapan_udara,
+            'curah_hujan' => $inputLog->curah_hujan,
+        ]);
+    }
+
+    /**
+     * @param  array<string, float>  $features
+     * @return array<string, mixed>
+     */
+    public function predictScenario(string $jenisTanaman, float $luasLahan, array $features): array
+    {
         $scores = [
-            'pH Tanah' => $this->rangeScore($inputLog->ph_tanah, 6.0, 7.5, 2.5),
-            'Suhu' => $this->rangeScore($inputLog->suhu, 24, 32, 10),
-            'Kelembapan Tanah' => $this->rangeScore($inputLog->kelembapan_tanah, 50, 80, 20),
-            'Curah Hujan' => $this->rangeScore($inputLog->curah_hujan, 80, 220, 120),
-            'Keseimbangan NPK' => $this->npkScore($inputLog->nitrogen, $inputLog->phosphorus, $inputLog->potassium),
-            'Ketersediaan Air' => $this->rangeScore($inputLog->jumlah_air, 20, 120, 120),
-            'Kelembapan Udara' => $this->rangeScore($inputLog->kelembapan_udara, 55, 85, 30),
+            'pH Tanah' => $this->rangeScore($features['ph_tanah'], 6.0, 7.5, 2.5),
+            'Suhu' => $this->rangeScore($features['suhu'], 24, 32, 10),
+            'Kelembapan Tanah' => $this->rangeScore($features['kelembapan_tanah'], 50, 80, 20),
+            'Curah Hujan' => $this->rangeScore($features['curah_hujan'], 80, 220, 120),
+            'Keseimbangan NPK' => $this->npkScore($features['nitrogen'], $features['phosphorus'], $features['potassium']),
+            'Ketersediaan Air' => $this->rangeScore($features['jumlah_air'], 20, 120, 120),
+            'Kelembapan Udara' => $this->rangeScore($features['kelembapan_udara'], 55, 85, 30),
         ];
 
         $score = round(collect($scores)->avg(), 2);
-        $yieldPerHectare = $this->baselineYieldPerHectare($project->jenis_tanaman);
+        $yieldPerHectare = $this->baselineYieldPerHectare($jenisTanaman);
         $modifier = max(0.4, min(1.2, $score / 85));
-        $estimasiPanenTon = round($project->luas_lahan * $yieldPerHectare * $modifier, 2);
+        $estimasiPanenTon = round($luasLahan * $yieldPerHectare * $modifier, 2);
         $status = $score >= 75 ? 'tinggi' : ($score >= 50 ? 'sedang' : 'rendah');
         $faktorDominan = collect($scores)->sort()->keys()->first() ?? 'Kondisi lahan';
 
@@ -34,7 +53,7 @@ class LegacyPredictionBaselineService
             'skor_kecocokan' => $score,
             'status' => $status,
             'faktor_dominan' => $faktorDominan,
-            'catatan_prediksi' => $this->buildNote($status, $estimasiPanenTon, $project->luas_lahan),
+            'catatan_prediksi' => $this->buildNote($status, $estimasiPanenTon, $luasLahan),
             'komponen_skor' => $scores,
         ];
     }

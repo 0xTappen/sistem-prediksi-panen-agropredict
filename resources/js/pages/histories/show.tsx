@@ -134,6 +134,9 @@ export default function HistoryShow({ history }: { history: HistoryDetail }) {
                         <p>Waktu panen prediksi: {recommendation.waktu_panen_prediksi}</p>
                         <p>Pengendalian hama: {recommendation.pengendalian_hama}</p>
                         <p>Catatan risiko: {recommendation.catatan_risiko}</p>
+                        {recommendation.insight_model ? (
+                            <p>Insight model: {recommendation.insight_model}</p>
+                        ) : null}
                         <Separator className="my-3" />
                         <div className="space-y-1">
                             <p className="font-medium">Tips Perawatan</p>
@@ -143,6 +146,17 @@ export default function HistoryShow({ history }: { history: HistoryDetail }) {
                         </div>
                     </div>
                 </FormSection>
+
+                {recommendation.simulasi_perbaikan ? (
+                    <FormSection title="Simulasi Perbaikan AI">
+                        <div className="grid gap-3 text-sm md:grid-cols-2">
+                            <Info label="Fokus Perbaikan" value={recommendation.simulasi_perbaikan.fokus_perbaikan.join(', ')} />
+                            <Info label="Estimasi Baru" value={`${recommendation.simulasi_perbaikan.estimasi_baru_ton.toFixed(2)} ton`} />
+                            <Info label="Delta Panen" value={`+${recommendation.simulasi_perbaikan.delta_ton.toFixed(2)} ton`} />
+                            <Info label="Skor Baru" value={recommendation.simulasi_perbaikan.skor_baru.toFixed(2)} />
+                        </div>
+                    </FormSection>
+                ) : null}
             </div>
         </>
     );

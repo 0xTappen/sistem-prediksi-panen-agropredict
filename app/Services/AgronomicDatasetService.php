@@ -132,6 +132,7 @@ class AgronomicDatasetService
                     }
 
                     $rows[] = [
+                        'fingerprint' => sprintf('%s:%s:%d', $cropKey, $scenarioKey, $variantIndex + 1),
                         'crop_key' => $cropKey,
                         'crop_label' => $profile['label'],
                         'scenario_key' => $scenarioKey,

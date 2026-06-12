@@ -7,9 +7,15 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ModelEvaluationService;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected ModelEvaluationService $evaluationService,
+    ) {
+    }
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -56,6 +62,7 @@ class DashboardController extends Controller
             ],
             'chart' => $chart,
             'recentHistories' => $recentHistories,
+            'modelEvaluation' => $this->evaluationService->summary(),
         ]);
     }
 }

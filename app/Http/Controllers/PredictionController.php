@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InputLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Services\ModelEvaluationService;
 use App\Services\PredictionService;
 use App\Services\RecommendationService;
 use Inertia\Inertia;
@@ -15,6 +16,7 @@ class PredictionController extends Controller
     public function __construct(
         protected PredictionService $predictionService,
         protected RecommendationService $recommendationService,
+        protected ModelEvaluationService $evaluationService,
     ) {
     }
 
@@ -44,6 +46,7 @@ class PredictionController extends Controller
             'project' => $inputLog->project,
             'prediction' => $prediction,
             'recommendation' => $recommendation,
+            'evaluation' => $this->evaluationService->summary(),
         ]);
     }
 }

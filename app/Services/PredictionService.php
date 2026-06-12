@@ -32,14 +32,28 @@ class PredictionService
      */
     public function predict(Project $project, InputLog $inputLog): array
     {
-        $profile = $this->datasetService->resolveCropProfile($project->jenis_tanaman);
-        $vector = $this->extractFeatureVector($inputLog);
+        return $this->predictScenario($project->jenis_tanaman, $project->luas_lahan, $this->extractFeatureVector($inputLog));
+    }
+
+    /**
+     * @param  array<string, float>  $features
+     * @return array<string, mixed>
+     */
+    public function predictScenario(
+        string $jenisTanaman,
+        float $luasLahan,
+        array $features,
+        bool $includeSimulation = true,
+        ?string $excludeFingerprint = null,
+    ): array {
+        $profile = $this->datasetService->resolveCropProfile($jenisTanaman);
 
         return $this->predictFromVector(
             cropProfile: $profile,
-            vector: $vector,
-            luasLahan: $project->luas_lahan,
-            includeSimulation: true,
+            vector: $features,
+            luasLahan: $luasLahan,
+            includeSimulation: $includeSimulation,
+            excludeFingerprint: $excludeFingerprint,
         );
     }
 
@@ -48,9 +62,15 @@ class PredictionService
      * @param  array<string, float>  $vector
      * @return array<string, mixed>
      */
-    protected function predictFromVector(array $cropProfile, array $vector, float $luasLahan, bool $includeSimulation): array
+    protected function predictFromVector(
+        array $cropProfile,
+        array $vector,
+        float $luasLahan,
+        bool $includeSimulation,
+        ?string $excludeFingerprint = null,
+    ): array
     {
-        $neighbors = $this->nearestNeighbors((string) $cropProfile['key'], $vector);
+        $neighbors = $this->nearestNeighbors((string) $cropProfile['key'], $vector, 7, $excludeFingerprint);
         $weightedYieldPerHa = $this->weightedAverage($neighbors, 'target_yield_per_ha');
         $predictedFactor = max(0.45, min(1.12, $weightedYieldPerHa / max(0.1, (float) $cropProfile['base_yield_per_ha'])));
         $componentScores = $this->componentScores($vector, $cropProfile);
@@ -109,15 +129,17 @@ class PredictionService
      * @param  array<string, float>  $vector
      * @return array<int, array<string, mixed>>
      */
-    protected function nearestNeighbors(string $cropKey, array $vector, int $limit = 7): array
+    protected function nearestNeighbors(string $cropKey, array $vector, int $limit = 7, ?string $excludeFingerprint = null): array
     {
         $rows = collect($this->datasetService->benchmarkRows())
             ->filter(fn (array $row): bool => $row['crop_key'] === $cropKey)
+            ->filter(fn (array $row): bool => $excludeFingerprint === null || $row['fingerprint'] !== $excludeFingerprint)
             ->values();
 
         if ($rows->isEmpty()) {
             $rows = collect($this->datasetService->benchmarkRows())
                 ->filter(fn (array $row): bool => $row['crop_key'] === 'generic')
+                ->filter(fn (array $row): bool => $excludeFingerprint === null || $row['fingerprint'] !== $excludeFingerprint)
                 ->values();
         }
 

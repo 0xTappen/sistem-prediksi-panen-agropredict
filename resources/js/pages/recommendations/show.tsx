@@ -7,18 +7,20 @@ import StatusBadge from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { InputLog, Prediction, Project, Recommendation } from '@/types';
+import type { InputLog, ModelEvaluation, Prediction, Project, Recommendation } from '@/types';
 
 export default function RecommendationShow({
     inputLog,
     project,
     prediction,
     recommendation,
+    evaluation,
 }: {
     inputLog: InputLog;
     project: Project;
     prediction: Prediction;
     recommendation: Recommendation;
+    evaluation: ModelEvaluation;
 }) {
     return (
         <>
@@ -43,8 +45,12 @@ export default function RecommendationShow({
                         <p>
                             Skor kecocokan: <span className="font-medium text-foreground">{prediction.skor_kecocokan.toFixed(2)}</span>
                         </p>
+                        <p>
+                            Confidence: <span className="font-medium text-foreground">{Math.round(prediction.confidence_score ?? 0)}%</span>
+                        </p>
                         <StatusBadge status={prediction.status} />
                         <p>{recommendation.ringkasan_status}</p>
+                        <p>{recommendation.insight_model}</p>
                     </CardContent>
                 </Card>
 
@@ -68,6 +74,43 @@ export default function RecommendationShow({
                                 </div>
                             ))}
                         </div>
+                    </FormSection>
+                </div>
+
+                {recommendation.prioritas_ai?.length ? (
+                    <FormSection title="Prioritas AI">
+                        <div className="space-y-2">
+                            {recommendation.prioritas_ai.map((item) => (
+                                <div key={item} className="rounded-2xl border border-border bg-muted/40 p-3 text-sm text-foreground">
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </FormSection>
+                ) : null}
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                    <FormSection title="Faktor Paling Berpengaruh">
+                        <div className="space-y-3">
+                            {(recommendation.faktor_paling_berpengaruh ?? []).map((item) => (
+                                <div key={item.factor} className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="font-medium text-foreground">{item.factor}</span>
+                                        <span className="text-muted-foreground">{item.impact_percent.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="h-2 rounded-full bg-muted">
+                                        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, item.impact_percent)}%` }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </FormSection>
+
+                    <FormSection title="Benchmark Model">
+                        <Info icon={Sparkles} label="Engine" value={evaluation.engine} />
+                        <Info icon={Sparkles} label="MAE Model" value={`${evaluation.model_mae_ton_ha.toFixed(3)} ton/ha`} />
+                        <Info icon={Sparkles} label="MAE Baseline" value={`${evaluation.baseline_mae_ton_ha.toFixed(3)} ton/ha`} />
+                        <Info icon={Sparkles} label="Improvement" value={`${evaluation.improvement_percent.toFixed(1)}%`} />
                     </FormSection>
                 </div>
 

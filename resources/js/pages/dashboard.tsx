@@ -15,7 +15,7 @@ import StatCard from '@/components/stat-card';
 import StatusBadge from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { PredictionHistory } from '@/types';
+import type { ModelEvaluation, PredictionHistory } from '@/types';
 
 type ChartPoint = {
     tanggal: string;
@@ -34,6 +34,7 @@ export default function Dashboard({
     stats,
     chart,
     recentHistories,
+    modelEvaluation,
 }: {
     stats: {
         total_projects: number;
@@ -43,6 +44,7 @@ export default function Dashboard({
     };
     chart: ChartPoint[];
     recentHistories: PredictionHistory[];
+    modelEvaluation: ModelEvaluation;
 }) {
     const { auth } = usePage().props;
 
@@ -101,6 +103,19 @@ export default function Dashboard({
                         </CardContent>
                     </Card>
                 </div>
+
+                <Card className="rounded-2xl border border-border bg-card shadow-sm">
+                    <CardHeader>
+                        <CardTitle>Ringkasan Evaluasi AI</CardTitle>
+                        <CardDescription>{modelEvaluation.engine}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 md:grid-cols-4">
+                        <MiniMetric label="Benchmark" value={`${modelEvaluation.sample_size} sampel`} />
+                        <MiniMetric label="MAE Model" value={`${modelEvaluation.model_mae_ton_ha.toFixed(3)} ton/ha`} />
+                        <MiniMetric label="MAE Baseline" value={`${modelEvaluation.baseline_mae_ton_ha.toFixed(3)} ton/ha`} />
+                        <MiniMetric label="Peningkatan" value={`${modelEvaluation.improvement_percent.toFixed(1)}%`} />
+                    </CardContent>
+                </Card>
 
                 <div className="grid gap-4 xl:grid-cols-3">
                     <Card className="xl:col-span-2 rounded-2xl border border-border bg-card shadow-sm">
@@ -228,3 +243,12 @@ Dashboard.layout = {
         },
     ],
 };
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="text-base font-semibold text-foreground">{value}</p>
+        </div>
+    );
+}

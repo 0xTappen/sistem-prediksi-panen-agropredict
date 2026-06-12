@@ -7,6 +7,11 @@ use App\Models\Project;
 
 class RecommendationService
 {
+    public function __construct(
+        protected ModelEvaluationService $evaluationService,
+    ) {
+    }
+
     /**
      * @param  array<string, mixed>  $prediction
      * @return array<string, mixed>
@@ -72,6 +77,20 @@ class RecommendationService
             default => 100,
         };
 
+        $importance = collect($prediction['feature_importance'] ?? [])
+            ->sortDesc()
+            ->take(3)
+            ->map(fn ($impact, $factor): array => [
+                'factor' => (string) $factor,
+                'impact_percent' => round((float) $impact, 2),
+            ])
+            ->values()
+            ->all();
+
+        $confidence = (float) ($prediction['confidence_score'] ?? 0);
+        $confidenceLabel = $confidence >= 82 ? 'tinggi' : ($confidence >= 68 ? 'sedang' : 'rendah');
+        $simulation = is_array($prediction['simulasi_perbaikan'] ?? null) ? $prediction['simulasi_perbaikan'] : null;
+
         return [
             'pupuk_disarankan' => $inputLog->nitrogen < 45 || $inputLog->phosphorus < 45 || $inputLog->potassium < 45
                 ? 'Pupuk makro spesifik (N/P/K) + NPK seimbang'
@@ -82,11 +101,28 @@ class RecommendationService
             'pengendalian_hama' => 'Lakukan inspeksi daun 2x seminggu, gunakan perangkap hama, dan rotasi pestisida bila diperlukan.',
             'catatan_risiko' => empty($risks) ? 'Risiko utama relatif rendah, lanjutkan monitoring berkala.' : implode(' ', $risks),
             'ringkasan_status' => sprintf(
-                'Skor %.2f dengan status %s. Prioritaskan perbaikan pada %s.',
+                'Skor %.2f dengan status %s. Prioritaskan perbaikan pada %s. Confidence model %s.',
                 (float) ($prediction['skor_kecocokan'] ?? 0),
                 (string) ($prediction['status'] ?? '-'),
                 (string) ($prediction['faktor_dominan'] ?? 'kondisi lahan'),
+                $confidenceLabel,
             ),
+            'insight_model' => sprintf(
+                'Model %s membaca pola lahan %s dengan confidence %.0f%% dan menemukan faktor paling sensitif di %s.',
+                (string) data_get($prediction, 'ringkasan_model.engine', 'AI'),
+                mb_strtolower((string) data_get($prediction, 'ringkasan_model.crop_profile', $project->jenis_tanaman)),
+                $confidence,
+                (string) ($prediction['faktor_dominan'] ?? 'kondisi lahan'),
+            ),
+            'confidence_label' => $confidenceLabel,
+            'prioritas_ai' => [
+                sprintf('Fokus utama: %s', (string) ($prediction['faktor_dominan'] ?? 'kondisi lahan')),
+                sprintf('Confidence model: %.0f%% (%s)', $confidence, $confidenceLabel),
+                sprintf('Estimasi produktivitas: %.2f ton/ha', (float) ($prediction['estimasi_per_hektare_ton'] ?? 0)),
+            ],
+            'faktor_paling_berpengaruh' => $importance,
+            'simulasi_perbaikan' => $simulation,
+            'evaluasi_model' => $this->evaluationService->summary(),
         ];
     }
 }

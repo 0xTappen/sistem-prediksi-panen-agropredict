@@ -41,6 +41,20 @@ export type Recommendation = {
     pengendalian_hama: string;
     catatan_risiko: string;
     ringkasan_status: string;
+    insight_model?: string;
+    confidence_label?: 'rendah' | 'sedang' | 'tinggi' | string;
+    prioritas_ai?: string[];
+    faktor_paling_berpengaruh?: Array<{
+        factor: string;
+        impact_percent: number;
+    }>;
+    simulasi_perbaikan?: {
+        fokus_perbaikan: string[];
+        estimasi_baru_ton: number;
+        delta_ton: number;
+        skor_baru: number;
+    } | null;
+    evaluasi_model?: ModelEvaluation;
 };
 
 export type Prediction = {
@@ -50,6 +64,37 @@ export type Prediction = {
     faktor_dominan: string;
     catatan_prediksi: string;
     komponen_skor: Record<string, number>;
+    confidence_score?: number;
+    estimasi_per_hektare_ton?: number;
+    feature_importance?: Record<string, number>;
+    ringkasan_model?: {
+        engine: string;
+        crop_profile: string;
+        neighbors_used: number;
+        confidence_label: string;
+    };
+    similar_cases?: Array<{
+        crop: string;
+        scenario: string;
+        yield_per_ha: number;
+        distance: number;
+    }>;
+    simulasi_perbaikan?: {
+        fokus_perbaikan: string[];
+        estimasi_baru_ton: number;
+        delta_ton: number;
+        skor_baru: number;
+    };
+};
+
+export type ModelEvaluation = {
+    sample_size: number;
+    model_mae_ton_ha: number;
+    model_rmse_ton_ha: number;
+    baseline_mae_ton_ha: number;
+    baseline_rmse_ton_ha: number;
+    improvement_percent: number;
+    engine: string;
 };
 
 export type PredictionHistory = {
