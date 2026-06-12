@@ -116,43 +116,18 @@ export default function GISDashboard({ projects }: { projects: Project[] }) {
                         const rvData = await rvResponse.json();
                         
                         if (rvData && rvData.host && rvData.radar && rvData.radar.past && rvData.radar.past.length > 0) {
-                            const frames = [...(rvData.radar.past || []), ...(rvData.radar.nowcast || [])];
+                            // Menggunakan 1 frame terakhir saja untuk mencegah Limit API (Error 429)
+                            const latestFrame = rvData.radar.past[rvData.radar.past.length - 1];
                             
-                            const radarLayers = frames.map((frame: any) => {
-                                return L.tileLayer(`${rvData.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-                                    opacity: 0,
-                                    attribution: 'Radar &copy; RainViewer',
-                                    zIndex: 10,
-                                    maxNativeZoom: 12,
-                                    maxZoom: 19,
-                                });
+                            const radarLayer = L.tileLayer(`${rvData.host}${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                                opacity: 0.65,
+                                attribution: 'Radar &copy; RainViewer',
+                                zIndex: 10,
+                                maxNativeZoom: 12,
+                                maxZoom: 19,
                             });
 
-                            const animatedRadarGroup = L.layerGroup(radarLayers);
-                            let currentFrameIndex = 0;
-                            let animationInterval: any;
-
-                            map.on('overlayadd', (e: any) => {
-                                if (e.name === "Radar Hujan (Animasi Live)") {
-                                    radarLayers.forEach(layer => layer.setOpacity(0));
-                                    radarLayers[currentFrameIndex].setOpacity(0.65);
-                                    
-                                    animationInterval = setInterval(() => {
-                                        radarLayers[currentFrameIndex].setOpacity(0);
-                                        currentFrameIndex = (currentFrameIndex + 1) % radarLayers.length;
-                                        radarLayers[currentFrameIndex].setOpacity(0.65);
-                                    }, 800); 
-                                }
-                            });
-
-                            map.on('overlayremove', (e: any) => {
-                                if (e.name === "Radar Hujan (Animasi Live)") {
-                                    clearInterval(animationInterval);
-                                    radarLayers.forEach(layer => layer.setOpacity(0));
-                                }
-                            });
-                            
-                            overlayMaps["Radar Hujan (Animasi Live)"] = animatedRadarGroup;
+                            overlayMaps["Radar Hujan (Live)"] = radarLayer;
                         }
                     } catch (e) {
                         console.warn("Gagal mengambil data RainViewer:", e);
