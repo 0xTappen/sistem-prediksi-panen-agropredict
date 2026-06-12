@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Services\ChatbotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,7 +21,6 @@ class ChatbotController extends Controller
     public function index(): Response
     {
         $user = request()->user();
-        $selectedConversationId = request()->integer('conversation');
 
         $conversations = ChatConversation::query()
             ->where('user_id', $user->id)
@@ -28,29 +28,34 @@ class ChatbotController extends Controller
             ->orderByDesc('id')
             ->get(['id', 'title', 'last_message_at', 'created_at']);
 
-        $activeConversation = null;
-        $messages = [];
-
-        if ($selectedConversationId > 0) {
-            $activeConversation = $conversations->firstWhere('id', $selectedConversationId);
-        }
-
-        if ($activeConversation === null) {
-            $activeConversation = $conversations->first();
-        }
-
-        if ($activeConversation !== null) {
-            $messages = ChatMessage::query()
-                ->where('conversation_id', $activeConversation->id)
-                ->orderBy('id')
-                ->get(['id', 'role', 'content', 'created_at']);
-        }
-
         return Inertia::render('chatbot/index', [
             'conversations' => $conversations,
-            'activeConversationId' => $activeConversation?->id,
-            'messages' => $messages,
+            'activeConversationId' => null,
+            'messages' => [],
             'ai' => $this->chatbotService->getActiveProviderMeta(),
+        ]);
+    }
+
+    public function showConversation(Request $request, ChatConversation $conversation): JsonResponse
+    {
+        if ($conversation->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $messages = ChatMessage::query()
+            ->where('conversation_id', $conversation->id)
+            ->orderBy('id')
+            ->get(['id', 'role', 'content', 'created_at']);
+
+        return response()->json([
+            'ok' => true,
+            'conversation' => $this->serializeConversation($conversation),
+            'messages' => $messages->map(fn (ChatMessage $message): array => [
+                'id' => $message->id,
+                'role' => $message->role,
+                'content' => $message->content,
+                'created_at' => $message->created_at?->toISOString(),
+            ])->all(),
         ]);
     }
 
@@ -115,12 +120,7 @@ class ChatbotController extends Controller
                 'ok' => true,
                 'reply' => $reply,
                 'ai' => $this->chatbotService->getActiveProviderMeta(),
-                'conversation' => [
-                    'id' => $conversation->id,
-                    'title' => $conversation->title,
-                    'last_message_at' => $conversation->last_message_at?->toISOString(),
-                    'created_at' => $conversation->created_at?->toISOString(),
-                ],
+                'conversation' => $this->serializeConversation($conversation),
             ]);
         } catch (\Throwable $exception) {
             return response()->json([
@@ -139,12 +139,7 @@ class ChatbotController extends Controller
 
         return response()->json([
             'ok' => true,
-            'conversation' => [
-                'id' => $conversation->id,
-                'title' => $conversation->title,
-                'last_message_at' => $conversation->last_message_at,
-                'created_at' => $conversation->created_at?->toISOString(),
-            ],
+            'conversation' => $this->serializeConversation($conversation),
         ]);
     }
 
@@ -170,5 +165,31 @@ class ChatbotController extends Controller
         }
 
         return mb_strimwidth($clean, 0, 56, '...');
+    }
+
+    /**
+     * @return array{id:int,title:string,last_message_at:?string,created_at:?string}
+     */
+    protected function serializeConversation(ChatConversation $conversation): array
+    {
+        return [
+            'id' => $conversation->id,
+            'title' => $conversation->title,
+            'last_message_at' => $this->toIsoString($conversation->last_message_at),
+            'created_at' => $this->toIsoString($conversation->created_at),
+        ];
+    }
+
+    protected function toIsoString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->toISOString();
+        }
+
+        return Carbon::parse($value)->toISOString();
     }
 }

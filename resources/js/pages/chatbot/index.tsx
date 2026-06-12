@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     Bot,
     Clock3,
@@ -122,6 +122,12 @@ export default function ChatbotPage() {
     const listRef = useRef<HTMLDivElement | null>(null);
     const sendingRef = useRef(false);
 
+    const resetToNewConversation = () => {
+        setActiveConversationId(null);
+        setMessages([defaultAssistantMessage()]);
+        window.history.replaceState(window.history.state, '', '/chatbot');
+    };
+
     useEffect(() => {
         setConversations(initialConversations ?? []);
         setActiveConversationId(initialActiveConversationId ?? null);
@@ -165,6 +171,44 @@ export default function ChatbotPage() {
     }, []);
 
     const canSubmit = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
+
+    const openConversation = async (conversationId: number) => {
+        if (isLoading) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/chatbot/conversations/${conversationId}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                },
+            });
+
+            const payload = (await response.json()) as {
+                ok?: boolean;
+                conversation?: Conversation;
+                messages?: ServerMessage[];
+                message?: string;
+            };
+
+            if (!response.ok || !payload.ok || !payload.conversation || !payload.messages) {
+                throw new Error(payload.message ?? 'Gagal membuka riwayat percakapan.');
+            }
+
+            setActiveConversationId(payload.conversation.id);
+            setMessages(payload.messages.length > 0 ? payload.messages.map(toClientMessage) : [defaultAssistantMessage()]);
+            window.history.replaceState(window.history.state, '', '/chatbot');
+
+            if (!isXlScreen) {
+                setIsHistoryVisible(false);
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Gagal membuka riwayat percakapan.';
+            toast.error(message);
+        }
+    };
 
     const sendMessage = async (rawText?: string) => {
         const messageText = (rawText ?? input).trim();
@@ -274,11 +318,14 @@ export default function ChatbotPage() {
                 throw new Error(payload.message ?? 'Gagal membuat percakapan baru.');
             }
 
-            router.get(
-                '/chatbot',
-                { conversation: payload.conversation.id },
-                { preserveScroll: true, preserveState: false, replace: true },
-            );
+            setConversations((prev) => {
+                const filtered = prev.filter((item) => item.id !== payload.conversation?.id);
+                return [payload.conversation as Conversation, ...filtered];
+            });
+            setActiveConversationId(payload.conversation.id);
+            setMessages([defaultAssistantMessage()]);
+            setInput('');
+            window.history.replaceState(window.history.state, '', '/chatbot');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Gagal membuat percakapan baru.';
             toast.error(message);
@@ -326,7 +373,8 @@ export default function ChatbotPage() {
             toast.success('Riwayat percakapan dihapus.');
 
             if (activeConversationId === conversationToDelete.id) {
-                router.get('/chatbot', {}, { preserveScroll: true, preserveState: false, replace: true });
+                setConversations((prev) => prev.filter((item) => item.id !== conversationToDelete.id));
+                resetToNewConversation();
                 setConversationToDelete(null);
                 return;
             }
@@ -402,13 +450,7 @@ export default function ChatbotPage() {
                                             key={conversation.id}
                                             type="button"
                                             title={conversation.title}
-                                            onClick={() => {
-                                                router.get(
-                                                    '/chatbot',
-                                                    { conversation: conversation.id },
-                                                    { preserveScroll: true, preserveState: false, replace: true },
-                                                );
-                                            }}
+                                            onClick={() => void openConversation(conversation.id)}
                                             className={cn(
                                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11px] transition-colors',
                                                 activeConversationId === conversation.id
@@ -474,16 +516,7 @@ export default function ChatbotPage() {
                                                     <button
                                                         type="button"
                                                         className="w-full min-w-0 text-left"
-                                                        onClick={() => {
-                                                            router.get(
-                                                                '/chatbot',
-                                                                { conversation: conversation.id },
-                                                                { preserveScroll: true, preserveState: false, replace: true },
-                                                            );
-                                                            if (!isXlScreen) {
-                                                                setIsHistoryVisible(false);
-                                                            }
-                                                        }}
+                                                        onClick={() => void openConversation(conversation.id)}
                                                     >
                                                         <p className="line-clamp-2 text-sm font-medium text-foreground">
                                                             {conversation.title}

@@ -25,6 +25,7 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
+    Route::get('chatbot/conversations/{conversation}', [ChatbotController::class, 'showConversation'])->name('chatbot.conversations.show');
     Route::post('chatbot/ask', [ChatbotController::class, 'ask'])->name('chatbot.ask');
     Route::post('chatbot/conversations', [ChatbotController::class, 'createConversation'])->name('chatbot.conversations.store');
     Route::delete('chatbot/conversations/{conversation}', [ChatbotController::class, 'destroyConversation'])->name('chatbot.conversations.destroy');
