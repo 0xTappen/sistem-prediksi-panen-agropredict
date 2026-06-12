@@ -11,6 +11,8 @@ type LeafletLike = {
     tileLayer: (url: string, options: Record<string, unknown>) => { addTo: (map: any) => void };
     marker: (latLng: [number, number], options: Record<string, unknown>) => { bindPopup: (html: string) => any; addTo: (map: any) => void };
     icon: (options: Record<string, unknown>) => any;
+    layerGroup: (layers?: any[]) => any;
+    control: { layers: (baseLayers?: any, overlays?: any, options?: any) => { addTo: (map: any) => void } };
 };
 
 declare global {
@@ -88,11 +90,46 @@ export default function GISDashboard({ projects }: { projects: Project[] }) {
                     const L = window.L;
                     const map = L.map(mapContainerRef.current).setView([-6.2, 106.8], 9);
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                         attribution: '&copy; OpenStreetMap &copy; CARTO',
                         subdomains: 'abcd',
                         maxZoom: 19,
-                    }).addTo(map);
+                    });
+
+                    const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                        maxZoom: 19,
+                    });
+
+                    cartoLight.addTo(map);
+
+                    const baseMaps = {
+                        "Carto Light": cartoLight,
+                        "Citra Satelit": esriSatellite,
+                    };
+
+                    const overlayMaps: Record<string, any> = {};
+
+                    // Fetch RainViewer Data
+                    try {
+                        const rvResponse = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                        const rvData = await rvResponse.json();
+                        
+                        if (rvData && rvData.host && rvData.radar && rvData.radar.past && rvData.radar.past.length > 0) {
+                            const latestFrame = rvData.radar.past[rvData.radar.past.length - 1];
+                            const radarLayer = L.tileLayer(`${rvData.host}${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                                opacity: 0.65,
+                                attribution: 'Radar &copy; RainViewer',
+                                zIndex: 10,
+                            });
+                            
+                            overlayMaps["Radar Hujan Live"] = radarLayer;
+                        }
+                    } catch (e) {
+                        console.warn("Gagal mengambil data RainViewer:", e);
+                    }
+
+                    L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
 
                     // Custom icons based on yield expectation
                     const greenIcon = L.icon({
