@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CloudSun, Droplets, FlaskConical, MapPin, Search, Sprout } from 'lucide-react';
-import { useEffect } from 'react';
+import { CloudSun, Droplets, FlaskConical, LoaderCircle, LocateFixed, MapPin, Search, Sprout } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 import FormSection from '@/components/form-section';
 import PageHeader from '@/components/page-header';
@@ -26,6 +26,58 @@ type WeatherData = {
     sumber_cuaca?: string;
 } | null;
 
+type LeafletLike = {
+    map: (element: HTMLElement) => any;
+    tileLayer: (url: string, options: Record<string, unknown>) => { addTo: (map: any) => void };
+    marker: (latLng: [number, number], options: Record<string, unknown>) => any;
+};
+
+declare global {
+    interface Window {
+        L?: LeafletLike;
+    }
+}
+
+const LEAFLET_CSS_ID = 'leaflet-css-cdn';
+const LEAFLET_SCRIPT_ID = 'leaflet-js-cdn';
+
+function ensureLeafletAssets(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined') {
+            reject(new Error('Leaflet hanya tersedia di browser.'));
+            return;
+        }
+
+        if (!document.getElementById(LEAFLET_CSS_ID)) {
+            const css = document.createElement('link');
+            css.id = LEAFLET_CSS_ID;
+            css.rel = 'stylesheet';
+            css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(css);
+        }
+
+        if (window.L) {
+            resolve();
+            return;
+        }
+
+        const existingScript = document.getElementById(LEAFLET_SCRIPT_ID) as HTMLScriptElement | null;
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve(), { once: true });
+            existingScript.addEventListener('error', () => reject(new Error('Gagal memuat Leaflet.')), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.id = LEAFLET_SCRIPT_ID;
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Gagal memuat Leaflet.'));
+        document.body.appendChild(script);
+    });
+}
+
 export default function InputCreate({
     projects,
     selectedProject,
@@ -41,6 +93,18 @@ export default function InputCreate({
     weatherLocationUsed: string | null;
     locationOverride: string;
 }) {
+    const [isMapOpen, setIsMapOpen] = useState(false);
+    const [isMapLoading, setIsMapLoading] = useState(false);
+    const [isReverseLoading, setIsReverseLoading] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
+    const [mapError, setMapError] = useState('');
+    const [selectedLat, setSelectedLat] = useState<number | null>(null);
+    const [selectedLon, setSelectedLon] = useState<number | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
+    const reverseRequestRef = useRef(0);
+
     const { data, setData, post, processing, errors } = useForm({
         project_id: selectedProject?.id?.toString() ?? '',
         nitrogen: '',
@@ -75,6 +139,86 @@ export default function InputCreate({
         setData('lokasi_cuaca', locationOverride || selectedProject?.lokasi || '');
     }, [locationOverride, selectedProject?.id, selectedProject?.lokasi, setData]);
 
+    useEffect(() => {
+        if (!isMapOpen) {
+            return;
+        }
+
+        let isActive = true;
+
+        const initMap = async () => {
+            setIsMapLoading(true);
+            setMapError('');
+
+            try {
+                await ensureLeafletAssets();
+                if (!isActive) {
+                    return;
+                }
+
+                if (!mapContainerRef.current || !window.L) {
+                    throw new Error('Kontainer peta tidak tersedia.');
+                }
+
+                const locationLat = selectedLat ?? -6.2;
+                const locationLon = selectedLon ?? 106.8166667;
+                const zoom = selectedLat !== null && selectedLon !== null ? 11 : 6;
+
+                if (!mapRef.current) {
+                    const L = window.L;
+                    const map = L.map(mapContainerRef.current).setView([locationLat, locationLon], zoom);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors',
+                        maxZoom: 19,
+                    }).addTo(map);
+
+                    markerRef.current = L.marker([locationLat, locationLon], { draggable: true }).addTo(map);
+                    markerRef.current.on('dragend', () => {
+                        const ll = markerRef.current.getLatLng();
+                        void setWeatherLocationFromCoordinates(ll.lat, ll.lng);
+                    });
+
+                    map.on('click', (event: any) => {
+                        const clickedLat = event.latlng.lat as number;
+                        const clickedLon = event.latlng.lng as number;
+                        markerRef.current.setLatLng([clickedLat, clickedLon]);
+                        void setWeatherLocationFromCoordinates(clickedLat, clickedLon);
+                    });
+
+                    mapRef.current = map;
+                } else {
+                    mapRef.current.setView([locationLat, locationLon], zoom);
+                    markerRef.current?.setLatLng([locationLat, locationLon]);
+                    setTimeout(() => mapRef.current?.invalidateSize(), 80);
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Gagal memuat peta.';
+                setMapError(message);
+            } finally {
+                if (isActive) {
+                    setIsMapLoading(false);
+                }
+            }
+        };
+
+        void initMap();
+
+        return () => {
+            isActive = false;
+        };
+    }, [isMapOpen, selectedLat, selectedLon]);
+
+    useEffect(() => {
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+                markerRef.current = null;
+            }
+        };
+    }, []);
+
     const handleProjectChange = (value: string) => {
         setData('project_id', value);
 
@@ -90,6 +234,84 @@ export default function InputCreate({
         post('/inputs');
     };
 
+    const setWeatherLocationFromCoordinates = async (lat: number, lon: number) => {
+        setSelectedLat(lat);
+        setSelectedLon(lon);
+        setMapError('');
+        setIsReverseLoading(true);
+        const requestId = ++reverseRequestRef.current;
+
+        try {
+            const response = await fetch(`/locations/reverse?lat=${lat}&lon=${lon}`, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            const payload = (await response.json()) as {
+                data?: { label?: string | null };
+                errors?: { lat?: string[] };
+                message?: string;
+            };
+
+            if (!response.ok) {
+                const message = payload.errors?.lat?.[0] ?? payload.message ?? 'Gagal mengambil nama lokasi.';
+                throw new Error(message);
+            }
+
+            if (requestId !== reverseRequestRef.current) {
+                return;
+            }
+
+            const label = payload.data?.label?.trim();
+            setData('lokasi_cuaca', label || `${lat.toFixed(7)}, ${lon.toFixed(7)}`);
+        } catch (error) {
+            if (requestId !== reverseRequestRef.current) {
+                return;
+            }
+            const message = error instanceof Error ? error.message : 'Gagal mengambil nama lokasi.';
+            setMapError(message);
+            setData('lokasi_cuaca', `${lat.toFixed(7)}, ${lon.toFixed(7)}`);
+        } finally {
+            if (requestId === reverseRequestRef.current) {
+                setIsReverseLoading(false);
+            }
+        }
+    };
+
+    const useCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            setMapError('Browser tidak mendukung lokasi GPS.');
+            return;
+        }
+
+        setIsLocating(true);
+        setMapError('');
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                if (!isMapOpen) {
+                    setIsMapOpen(true);
+                }
+                if (markerRef.current && mapRef.current) {
+                    markerRef.current.setLatLng([lat, lon]);
+                    mapRef.current.setView([lat, lon], 14);
+                }
+                void setWeatherLocationFromCoordinates(lat, lon);
+                setIsLocating(false);
+            },
+            () => {
+                setMapError('Izin lokasi ditolak atau tidak tersedia.');
+                setIsLocating(false);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+            },
+        );
+    };
+
     const fetchWeatherByLocation = () => {
         if (data.lokasi_cuaca.trim().length === 0) {
             return;
@@ -98,6 +320,11 @@ export default function InputCreate({
         const query: Record<string, string> = {
             location_override: data.lokasi_cuaca,
         };
+
+        if (selectedLat !== null && selectedLon !== null) {
+            query.weather_latitude = selectedLat.toString();
+            query.weather_longitude = selectedLon.toString();
+        }
 
         if (data.project_id) {
             query.project_id = data.project_id;
@@ -222,6 +449,32 @@ export default function InputCreate({
                                 Boleh isi nama lokasi biasa. Jika ada kode ADM4 BMKG, hasil biasanya lebih akurat.
                                 Data cuaca bisa diambil meski proyek belum dipilih.
                             </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => setIsMapOpen((prev) => !prev)}>
+                                    <MapPin className="h-4 w-4" />
+                                    {isMapOpen ? 'Tutup Peta' : 'Pilih di Peta'}
+                                </Button>
+                                <Button type="button" variant="outline" size="sm" onClick={useCurrentLocation} disabled={isLocating}>
+                                    {isLocating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                                    Lokasi Saya
+                                </Button>
+                                {isReverseLoading ? <span className="text-xs text-muted-foreground">Menyinkronkan lokasi...</span> : null}
+                            </div>
+                            {isMapOpen ? (
+                                <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                                    {isMapLoading ? (
+                                        <div className="flex h-72 items-center justify-center gap-2 text-sm text-muted-foreground">
+                                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                                            Memuat peta...
+                                        </div>
+                                    ) : null}
+                                    <div ref={mapContainerRef} className="h-72 w-full" />
+                                    <div className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
+                                        Geser peta lalu klik titik, atau drag marker untuk menentukan lokasi cuaca.
+                                    </div>
+                                </div>
+                            ) : null}
+                            {mapError !== '' ? <p className="text-xs text-destructive">{mapError}</p> : null}
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-3">

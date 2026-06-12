@@ -25,6 +25,15 @@ class WeatherService
 
         $errors = [];
         $adm4 = $this->extractAdm4Code($location);
+        $coordinates = $this->extractCoordinatesFromLocation($location);
+
+        if ($coordinates !== null) {
+            try {
+                return $this->getWeatherFromOpenMeteoByCoordinates($coordinates['latitude'], $coordinates['longitude']);
+            } catch (\Throwable $exception) {
+                $errors[] = $exception->getMessage();
+            }
+        }
 
         if ($adm4 !== null) {
             try {
@@ -43,6 +52,20 @@ class WeatherService
         throw new RuntimeException(
             'Gagal mengambil data cuaca otomatis. Silakan input manual. Detail: '.implode(' | ', array_unique($errors)),
         );
+    }
+
+    /**
+     * @return array{suhu: float, kelembapan_udara: float, curah_hujan: float, sumber_cuaca: string}
+     */
+    public function getWeatherByCoordinates(float $latitude, float $longitude): array
+    {
+        $mockMode = (bool) config('services.weather.mock');
+
+        if ($mockMode) {
+            return $this->mockFromLocation($latitude.','.$longitude);
+        }
+
+        return $this->getWeatherFromOpenMeteoByCoordinates($latitude, $longitude);
     }
 
     /**
@@ -84,29 +107,29 @@ class WeatherService
      */
     protected function getWeatherFromOpenMeteo(string $location): array
     {
-        $geoResponse = Http::timeout(8)->acceptJson()->get(self::OPEN_METEO_GEOCODING_URL, [
-            'name' => $location,
-            'count' => 1,
-            'language' => 'id',
-            'format' => 'json',
-        ]);
+        $openMeteoCoords = $this->geocodeWithOpenMeteo($location);
 
-        if ($geoResponse->failed()) {
-            throw new RuntimeException('Gagal mencari koordinat lokasi.');
+        if ($openMeteoCoords !== null) {
+            return $this->getWeatherFromOpenMeteoByCoordinates($openMeteoCoords['latitude'], $openMeteoCoords['longitude']);
         }
 
-        $geo = $geoResponse->json();
-        $firstResult = data_get($geo, 'results.0');
-        $lat = data_get($firstResult, 'latitude');
-        $lon = data_get($firstResult, 'longitude');
+        $nominatimCoords = $this->geocodeWithNominatim($location);
 
-        if (! is_numeric($lat) || ! is_numeric($lon)) {
-            throw new RuntimeException('Lokasi tidak dikenali oleh geocoding.');
+        if ($nominatimCoords !== null) {
+            return $this->getWeatherFromOpenMeteoByCoordinates($nominatimCoords['latitude'], $nominatimCoords['longitude']);
         }
 
+        throw new RuntimeException('Lokasi tidak dikenali oleh geocoding.');
+    }
+
+    /**
+     * @return array{suhu: float, kelembapan_udara: float, curah_hujan: float, sumber_cuaca: string}
+     */
+    protected function getWeatherFromOpenMeteoByCoordinates(float $latitude, float $longitude): array
+    {
         $forecastResponse = Http::timeout(8)->acceptJson()->get(self::OPEN_METEO_FORECAST_URL, [
-            'latitude' => (float) $lat,
-            'longitude' => (float) $lon,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
             'current' => 'temperature_2m,relative_humidity_2m,precipitation',
             'timezone' => 'auto',
             'forecast_days' => 1,
@@ -130,6 +153,114 @@ class WeatherService
             'kelembapan_udara' => round((float) $humidity, 2),
             'curah_hujan' => round((float) $rain, 2),
             'sumber_cuaca' => 'api',
+        ];
+    }
+
+    /**
+     * @return array{latitude: float, longitude: float}|null
+     */
+    protected function extractCoordinatesFromLocation(string $location): ?array
+    {
+        if (preg_match('/^\s*(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/', $location, $matches) !== 1) {
+            return null;
+        }
+
+        $lat = (float) $matches[1];
+        $lon = (float) $matches[2];
+
+        if ($lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
+            return null;
+        }
+
+        return [
+            'latitude' => $lat,
+            'longitude' => $lon,
+        ];
+    }
+
+    /**
+     * @return array{latitude: float, longitude: float}|null
+     */
+    protected function geocodeWithOpenMeteo(string $location): ?array
+    {
+        $geoResponse = Http::timeout(8)->acceptJson()->get(self::OPEN_METEO_GEOCODING_URL, [
+            'name' => $location,
+            'count' => 1,
+            'language' => 'id',
+            'format' => 'json',
+        ]);
+
+        if ($geoResponse->failed()) {
+            return null;
+        }
+
+        $geo = $geoResponse->json();
+        $firstResult = data_get($geo, 'results.0');
+        $lat = data_get($firstResult, 'latitude');
+        $lon = data_get($firstResult, 'longitude');
+
+        if (! is_numeric($lat) || ! is_numeric($lon)) {
+            return null;
+        }
+
+        return [
+            'latitude' => (float) $lat,
+            'longitude' => (float) $lon,
+        ];
+    }
+
+    /**
+     * @return array{latitude: float, longitude: float}|null
+     */
+    protected function geocodeWithNominatim(string $location): ?array
+    {
+        $baseUrl = rtrim((string) config('services.nominatim.base_url'), '/');
+        $userAgent = trim((string) config('services.nominatim.user_agent'));
+        $contactEmail = trim((string) config('services.nominatim.contact_email'));
+        $countryCodes = trim((string) config('services.nominatim.country_codes'));
+
+        if ($baseUrl === '' || $userAgent === '') {
+            return null;
+        }
+
+        $params = [
+            'q' => $location,
+            'format' => 'jsonv2',
+            'limit' => 1,
+            'addressdetails' => 1,
+        ];
+
+        if ($countryCodes !== '') {
+            $params['countrycodes'] = $countryCodes;
+        }
+
+        if ($contactEmail !== '') {
+            $params['email'] = $contactEmail;
+        }
+
+        $response = Http::timeout(8)
+            ->acceptJson()
+            ->withHeaders([
+                'User-Agent' => $userAgent,
+                'Accept-Language' => 'id,en;q=0.8',
+            ])
+            ->get($baseUrl.'/search', $params);
+
+        if ($response->failed()) {
+            return null;
+        }
+
+        $item = data_get($response->json(), '0');
+        $lat = data_get($item, 'lat');
+        $lon = data_get($item, 'lon');
+
+        if (! is_numeric($lat) || ! is_numeric($lon)) {
+            return null;
+        }
+
+        return [
+            'latitude' => (float) $lat,
+            'longitude' => (float) $lon,
         ];
     }
 

@@ -29,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('chatbot/conversations', [ChatbotController::class, 'createConversation'])->name('chatbot.conversations.store');
     Route::delete('chatbot/conversations/{conversation}', [ChatbotController::class, 'destroyConversation'])->name('chatbot.conversations.destroy');
     Route::get('locations/search', [LocationController::class, 'search'])->name('locations.search');
+    Route::get('locations/reverse', [LocationController::class, 'reverse'])->name('locations.reverse');
 
     Route::resource('projects', ProjectController::class);
 

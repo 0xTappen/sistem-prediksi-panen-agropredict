@@ -32,5 +32,26 @@ class LocationController extends Controller
             'data' => $results,
         ]);
     }
-}
 
+    public function reverse(Request $request, LocationSearchService $locationSearchService): JsonResponse
+    {
+        $validated = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lon' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        try {
+            $label = $locationSearchService->reverse((float) $validated['lat'], (float) $validated['lon']);
+        } catch (RuntimeException $exception) {
+            throw ValidationException::withMessages([
+                'lat' => $exception->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+            'data' => [
+                'label' => $label,
+            ],
+        ]);
+    }
+}

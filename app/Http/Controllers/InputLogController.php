@@ -27,6 +27,8 @@ class InputLogController extends Controller
         $weatherData = null;
         $weatherError = null;
         $locationOverride = trim((string) $request->query('location_override', ''));
+        $weatherLatitude = $request->query('weather_latitude');
+        $weatherLongitude = $request->query('weather_longitude');
         $weatherLocationUsed = null;
 
         if ($request->filled('project_id')) {
@@ -43,7 +45,19 @@ class InputLogController extends Controller
 
         if ($weatherLocationUsed !== null) {
             try {
-                $weatherData = $this->weatherService->getWeatherByLocation($weatherLocationUsed);
+                if (is_numeric($weatherLatitude) && is_numeric($weatherLongitude)) {
+                    $lat = (float) $weatherLatitude;
+                    $lon = (float) $weatherLongitude;
+
+                    if ($lat >= -90 && $lat <= 90 && $lon >= -180 && $lon <= 180) {
+                        $weatherData = $this->weatherService->getWeatherByCoordinates($lat, $lon);
+                        $weatherLocationUsed .= sprintf(' (%.5f, %.5f)', $lat, $lon);
+                    } else {
+                        $weatherData = $this->weatherService->getWeatherByLocation($weatherLocationUsed);
+                    }
+                } else {
+                    $weatherData = $this->weatherService->getWeatherByLocation($weatherLocationUsed);
+                }
             } catch (\Throwable $exception) {
                 $weatherError = $exception->getMessage();
             }

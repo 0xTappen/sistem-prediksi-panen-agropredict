@@ -82,5 +82,47 @@ class LocationSearchService
 
         return $results;
     }
-}
 
+    public function reverse(float $latitude, float $longitude): ?string
+    {
+        $baseUrl = rtrim((string) config('services.nominatim.base_url'), '/');
+        $userAgent = trim((string) config('services.nominatim.user_agent'));
+        $contactEmail = trim((string) config('services.nominatim.contact_email'));
+
+        if ($baseUrl === '') {
+            throw new RuntimeException('Konfigurasi NOMINATIM_BASE_URL belum diatur.');
+        }
+
+        if ($userAgent === '') {
+            throw new RuntimeException('Konfigurasi NOMINATIM_USER_AGENT belum diatur.');
+        }
+
+        $params = [
+            'lat' => $latitude,
+            'lon' => $longitude,
+            'format' => 'jsonv2',
+            'zoom' => 18,
+            'addressdetails' => 1,
+        ];
+
+        if ($contactEmail !== '') {
+            $params['email'] = $contactEmail;
+        }
+
+        $response = Http::timeout(8)
+            ->acceptJson()
+            ->withHeaders([
+                'User-Agent' => $userAgent,
+                'Accept-Language' => 'id,en;q=0.8',
+            ])
+            ->get($baseUrl.'/reverse', $params);
+
+        if ($response->failed()) {
+            throw new RuntimeException('Gagal mengambil detail alamat dari koordinat.');
+        }
+
+        $label = trim((string) data_get($response->json(), 'display_name', ''));
+
+        return $label !== '' ? $label : null;
+    }
+}
