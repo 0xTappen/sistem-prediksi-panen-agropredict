@@ -1,12 +1,11 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CloudSun, Droplets, FlaskConical, MapPin, Sprout } from 'lucide-react';
+import { CloudSun, Droplets, FlaskConical, MapPin, Search, Sprout } from 'lucide-react';
 import { useEffect } from 'react';
 import type { ComponentType } from 'react';
 import FormSection from '@/components/form-section';
 import PageHeader from '@/components/page-header';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -194,33 +193,35 @@ export default function InputCreate({
                             </Alert>
                         ) : null}
 
-                        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-                            <div className="grid gap-2">
-                                <Label htmlFor="lokasi_cuaca" className="inline-flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-primary" />
-                                    Lokasi Cuaca
-                                </Label>
+                        <div className="grid gap-2">
+                            <Label htmlFor="lokasi_cuaca" className="inline-flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                Lokasi Cuaca
+                            </Label>
+                            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                                 <Input
                                     id="lokasi_cuaca"
                                     value={data.lokasi_cuaca}
                                     onChange={(e) => setData('lokasi_cuaca', e.target.value)}
                                     placeholder="Contoh: Bandung atau 31.71.03.1001 - Kemayoran"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    Boleh isi nama lokasi biasa. Jika ada kode ADM4 BMKG, hasil biasanya lebih akurat.
-                                    Data cuaca bisa diambil meski proyek belum dipilih.
-                                </p>
+                                <div className="flex items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={fetchWeatherByLocation}
+                                        disabled={data.lokasi_cuaca.trim().length === 0}
+                                        className="inline-flex items-center gap-2"
+                                    >
+                                        <Search className="h-4 w-4" />
+                                        Cari Cuaca
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="flex items-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={fetchWeatherByLocation}
-                                    disabled={data.lokasi_cuaca.trim().length === 0}
-                                >
-                                    Ambil Cuaca API
-                                </Button>
-                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Boleh isi nama lokasi biasa. Jika ada kode ADM4 BMKG, hasil biasanya lebih akurat.
+                                Data cuaca bisa diambil meski proyek belum dipilih.
+                            </p>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-3">
@@ -229,23 +230,6 @@ export default function InputCreate({
                             <Field id="curah_hujan" label="Curah Hujan (mm)" value={data.curah_hujan} onChange={(value) => setData('curah_hujan', value)} error={errors.curah_hujan} icon={CloudSun} />
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Label>Sumber Cuaca</Label>
-                            {data.sumber_cuaca === 'api' ? (
-                                <Badge className="bg-emerald-600 text-white">API</Badge>
-                            ) : (
-                                <Badge className="bg-amber-500 text-white">MANUAL</Badge>
-                            )}
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setData('sumber_cuaca', data.sumber_cuaca === 'api' ? 'manual' : 'api')}
-                            >
-                                Ganti
-                            </Button>
-                        </div>
-                        <InputError message={errors.sumber_cuaca} />
                     </FormSection>
 
                     <FormSection title="Catatan Tambahan" description="Opsional, untuk konteks tambahan.">
