@@ -10,7 +10,7 @@ export type UseAppearanceReturn = {
 };
 
 const listeners = new Set<() => void>();
-let currentAppearance: Appearance = 'light';
+let currentAppearance: Appearance = 'dark';
 
 const isAppearanceValue = (value: string | null): value is Appearance => {
     return value === 'light' || value === 'dark' || value === 'system';
@@ -46,7 +46,7 @@ const getCookieValue = (name: string): string | null => {
 
 const getStoredAppearance = (): Appearance => {
     if (typeof window === 'undefined') {
-        return 'light';
+        return 'dark';
     }
 
     const stored = localStorage.getItem('appearance');
@@ -60,7 +60,7 @@ const getStoredAppearance = (): Appearance => {
         return cookie;
     }
 
-    return 'light';
+    return 'dark';
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
@@ -115,7 +115,7 @@ export function useAppearance(): UseAppearanceReturn {
     const appearance: Appearance = useSyncExternalStore(
         subscribe,
         () => currentAppearance,
-        () => 'light',
+        () => 'dark',
     );
 
     const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)

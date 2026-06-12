@@ -17,7 +17,7 @@ class SettingController extends Controller
         $setting = UserSetting::query()->firstOrCreate(
             ['user_id' => $request->user()->id],
             [
-                'theme' => 'light',
+                'theme' => 'dark',
                 'notification_enabled' => true,
                 'temperature_unit' => 'celsius',
                 'rainfall_unit' => 'mm',

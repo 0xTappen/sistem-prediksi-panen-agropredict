@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-            $table->string('theme')->default('light');
+            $table->string('theme')->default('dark');
             $table->boolean('notification_enabled')->default(true);
             $table->string('temperature_unit')->default('celsius');
             $table->string('rainfall_unit')->default('mm');

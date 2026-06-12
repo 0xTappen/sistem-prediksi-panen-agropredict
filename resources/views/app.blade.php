@@ -7,7 +7,7 @@
 
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "light" }}';
+                const appearance = '{{ $appearance ?? "dark" }}';
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark);
 
@@ -23,7 +23,7 @@
 
         <style>
             html { background-color: #F7F8EF; }
-            html.dark { background-color: #111A12; }
+            html.dark { background-color: #0F1115; }
         </style>
 
         <link rel="icon" type="image/png" href="/brand/logo.png?v={{ @filemtime(public_path('brand/logo.png')) }}">

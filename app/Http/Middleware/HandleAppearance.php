@@ -26,7 +26,7 @@ class HandleAppearance
         }
 
         if (! in_array($appearance, ['light', 'dark', 'system'], true)) {
-            $appearance = 'light';
+            $appearance = 'dark';
         }
 
         View::share('appearance', $appearance);
