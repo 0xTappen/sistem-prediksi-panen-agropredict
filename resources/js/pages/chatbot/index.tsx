@@ -9,6 +9,8 @@ import {
     SendHorizontal,
     Trash2,
     UserRound,
+    Mic,
+    MicOff,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -119,8 +121,51 @@ export default function ChatbotPage() {
         provider: page.props.ai?.provider ?? 'ai',
         model: page.props.ai?.model ?? '',
     });
+    const [isListening, setIsListening] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
     const sendingRef = useRef(false);
+    const recognitionRef = useRef<any>(null);
+
+    useEffect(() => {
+        // @ts-ignore
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = true;
+            recognitionRef.current.lang = 'id-ID';
+
+            recognitionRef.current.onresult = (event: any) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    setInput((prev) => prev + (prev ? ' ' : '') + finalTranscript);
+                }
+            };
+
+            recognitionRef.current.onend = () => setIsListening(false);
+            recognitionRef.current.onerror = () => setIsListening(false);
+        }
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            toast.error('Browser Anda tidak mendukung fitur pengenalan suara.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            recognitionRef.current.start();
+            setIsListening(true);
+            toast.info('Mendengarkan... Silakan bicara.');
+        }
+    };
 
     const resetToNewConversation = () => {
         setActiveConversationId(null);
@@ -661,6 +706,16 @@ export default function ChatbotPage() {
                                         className="min-h-[48px] max-h-[140px] flex-1 resize-none rounded-2xl border-border bg-card py-2.5"
                                         disabled={isLoading}
                                     />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className={cn("h-11 w-11 shrink-0 rounded-2xl", isListening && "border-destructive bg-destructive/10 text-destructive animate-pulse")}
+                                        onClick={toggleListening}
+                                        aria-label={isListening ? "Berhenti mendengarkan" : "Mulai mendengarkan"}
+                                    >
+                                        {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                    </Button>
                                     <Button
                                         onClick={() => void sendMessage()}
                                         disabled={!canSubmit}
