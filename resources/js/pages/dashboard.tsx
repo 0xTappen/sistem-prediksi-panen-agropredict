@@ -132,17 +132,18 @@ export default function Dashboard({
                             ) : (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                                        <CartesianGrid strokeDasharray="4 4" stroke="#D8E2C3" />
-                                        <XAxis dataKey="tanggal" stroke="#647064" fontSize={12} />
-                                        <YAxis stroke="#647064" fontSize={12} />
+                                        <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
+                                        <XAxis dataKey="tanggal" stroke="var(--muted-foreground)" fontSize={12} />
+                                        <YAxis stroke="var(--muted-foreground)" fontSize={12} />
                                         <Tooltip
                                             contentStyle={{
                                                 borderRadius: 16,
-                                                border: '1px solid #D8E2C3',
-                                                background: '#FFFFFF',
+                                                border: '1px solid var(--border)',
+                                                background: 'var(--card)',
+                                                color: 'var(--card-foreground)',
                                             }}
                                         />
-                                        <Bar dataKey="estimasi" fill="#2F6B3F" radius={[8, 8, 0, 0]} />
+                                        <Bar dataKey="estimasi" fill="var(--chart-1)" radius={[8, 8, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             )}

@@ -43,9 +43,9 @@ export default function HistoryShow({ history }: { history: HistoryDetail }) {
     const recommendation = history.rekomendasi_json;
 
     const chartData = [
-        { name: 'N', value: history.input_log.nitrogen, fill: '#2F6B3F' },
-        { name: 'P', value: history.input_log.phosphorus, fill: '#A7C957' },
-        { name: 'K', value: history.input_log.potassium, fill: '#F2B84B' },
+        { name: 'N', value: history.input_log.nitrogen, fill: 'var(--chart-1)' },
+        { name: 'P', value: history.input_log.phosphorus, fill: 'var(--chart-2)' },
+        { name: 'K', value: history.input_log.potassium, fill: 'var(--chart-3)' },
     ];
 
     return (
@@ -96,9 +96,9 @@ export default function HistoryShow({ history }: { history: HistoryDetail }) {
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="4 4" stroke="#D8E2C3" />
-                                    <XAxis dataKey="name" stroke="#647064" />
-                                    <YAxis stroke="#647064" />
+                                    <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
+                                    <XAxis dataKey="name" stroke="var(--muted-foreground)" />
+                                    <YAxis stroke="var(--muted-foreground)" />
                                     <Tooltip />
                                     <Bar dataKey="value" radius={[8, 8, 0, 0]} />
                                 </BarChart>

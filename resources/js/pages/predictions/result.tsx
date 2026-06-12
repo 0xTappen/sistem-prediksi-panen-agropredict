@@ -55,14 +55,14 @@ export default function PredictionResult({
                 />
 
                 <Card className="overflow-hidden rounded-2xl border border-border">
-                    <div className="bg-gradient-to-r from-primary to-[#255634] p-6 text-primary-foreground">
+                    <div className="bg-gradient-to-r from-primary to-secondary p-6 text-primary-foreground dark:from-[#2a3038] dark:to-[#171a20] dark:text-foreground">
                         <p className="text-sm opacity-90">Estimasi Panen</p>
                         <p className="text-4xl font-semibold tracking-tight">
                             {prediction.estimasi_panen_ton.toFixed(2)} ton
                         </p>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                             <StatusBadge status={prediction.status} />
-                            <span className="rounded-full bg-white/20 px-3 py-1 text-xs">
+                            <span className="rounded-full bg-white/20 px-3 py-1 text-xs dark:bg-white/10">
                                 Skor {prediction.skor_kecocokan.toFixed(2)}
                             </span>
                         </div>
@@ -100,12 +100,12 @@ export default function PredictionResult({
                         <CardContent className="h-[320px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <RadarChart data={chartData}>
-                                    <PolarGrid stroke="#D8E2C3" />
-                                    <PolarAngleAxis dataKey="name" tick={{ fill: '#647064', fontSize: 11 }} />
+                                    <PolarGrid stroke="var(--border)" />
+                                    <PolarAngleAxis dataKey="name" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} />
                                     <Radar
                                         dataKey="value"
-                                        stroke="#2F6B3F"
-                                        fill="#A7C957"
+                                        stroke="var(--chart-2)"
+                                        fill="var(--chart-3)"
                                         fillOpacity={0.45}
                                     />
                                 </RadarChart>

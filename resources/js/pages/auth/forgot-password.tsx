@@ -14,7 +14,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <Head title="Lupa Password" />
 
             {status && (
-                <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                     {status}
                 </div>
             )}

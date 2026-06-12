@@ -201,7 +201,7 @@ export default function Profile({
                             </p>
 
                             {status === 'verification-link-sent' && (
-                                <div className="mt-2 text-sm font-medium text-green-600">
+                                <div className="mt-2 text-sm font-medium text-green-600 dark:text-zinc-300">
                                     A new verification link has been sent to your email address.
                                 </div>
                             )}
@@ -229,4 +229,3 @@ Profile.layout = {
         },
     ],
 };
-
