@@ -13,13 +13,13 @@ class ChatbotService
     /**
      * @param  array<int, array{role:string, content:string}>  $history
      */
-    public function ask(string $message, array $history = []): string
+    public function ask(string $message, array $history = [], string $context = ''): string
     {
         $provider = $this->activeProvider();
 
         return match ($provider) {
-            'groq' => $this->askWithGroq($message, $history),
-            'gemini' => $this->askWithGemini($message, $history),
+            'groq' => $this->askWithGroq($message, $history, $context),
+            'gemini' => $this->askWithGemini($message, $history, $context),
             default => throw new RuntimeException("Provider AI '$provider' tidak didukung."),
         };
     }
@@ -45,7 +45,7 @@ class ChatbotService
     /**
      * @param  array<int, array{role:string, content:string}>  $history
      */
-    protected function askWithGroq(string $message, array $history): string
+    protected function askWithGroq(string $message, array $history, string $context): string
     {
         $apiKey = (string) config('services.groq.api_key');
         $model = (string) config('services.groq.model');
@@ -60,7 +60,7 @@ class ChatbotService
         }
 
         $messages = [
-            ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
+            ['role' => 'system', 'content' => $this->buildSystemPrompt($context)],
         ];
 
         foreach ($history as $item) {
@@ -110,7 +110,7 @@ class ChatbotService
     /**
      * @param  array<int, array{role:string, content:string}>  $history
      */
-    protected function askWithGemini(string $message, array $history): string
+    protected function askWithGemini(string $message, array $history, string $context): string
     {
         $apiKey = (string) config('services.gemini.api_key');
         $model = (string) config('services.gemini.model');
@@ -153,7 +153,7 @@ class ChatbotService
             ->post(sprintf('%s/%s:generateContent', $baseUrl, $model), [
                 'system_instruction' => [
                     'parts' => [[
-                        'text' => self::SYSTEM_PROMPT,
+                        'text' => $this->buildSystemPrompt($context),
                     ]],
                 ],
                 'contents' => $contents,
@@ -233,6 +233,17 @@ class ChatbotService
         }
 
         return trim($slice).'...';
+    }
+
+    protected function buildSystemPrompt(string $context): string
+    {
+        $prompt = self::SYSTEM_PROMPT.' Jika user bertanya tentang proyek, lahan, prediksi, atau rekomendasi miliknya, prioritaskan konteks akun yang diberikan. Jika data konteks tidak cukup, katakan singkat bahwa jawaban bersifat umum.';
+
+        if (trim($context) === '') {
+            return $prompt;
+        }
+
+        return $prompt."\n\n".$context;
     }
 
     protected function activeProvider(): string

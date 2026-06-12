@@ -91,7 +91,7 @@ function defaultAssistantMessage(): ChatMessage {
         id: 'assistant-welcome',
         role: 'assistant',
         content:
-            'Halo, saya asisten AI pertanian. Mulai percakapan baru lalu tanyakan kondisi lahan, cuaca, prediksi panen, atau rekomendasi pupuk.',
+            'Halo, saya asisten AI pertanian. Saya bisa membaca ringkasan proyek dan prediksi Anda untuk memberi saran yang lebih kontekstual.',
         createdAt: new Date().toISOString(),
     };
 }

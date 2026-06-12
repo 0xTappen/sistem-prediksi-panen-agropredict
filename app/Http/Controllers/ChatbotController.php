@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ChatbotAskRequest;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\PredictionHistory;
+use App\Models\Project;
 use App\Services\ChatbotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -93,6 +95,7 @@ class ChatbotController extends Controller
             $reply = $this->chatbotService->ask(
                 (string) $validated['message'],
                 $history,
+                $this->buildGroundingContext($user),
             );
 
             ChatMessage::query()->create([
@@ -165,6 +168,62 @@ class ChatbotController extends Controller
         }
 
         return mb_strimwidth($clean, 0, 56, '...');
+    }
+
+    protected function buildGroundingContext($user): string
+    {
+        $projects = Project::query()
+            ->where('user_id', $user->id)
+            ->latest('updated_at')
+            ->limit(3)
+            ->get(['nama_tanaman', 'jenis_tanaman', 'luas_lahan', 'lokasi']);
+
+        $predictions = PredictionHistory::query()
+            ->with('project:id,nama_tanaman')
+            ->where('user_id', $user->id)
+            ->latest('tanggal_prediksi')
+            ->limit(3)
+            ->get(['project_id', 'estimasi_panen_ton', 'status', 'faktor_dominan', 'tanggal_prediksi']);
+
+        $lines = [
+            'Konteks akun pengguna:',
+            'Nama pengguna: '.$user->name,
+        ];
+
+        if ($projects->isNotEmpty()) {
+            $lines[] = 'Proyek aktif:';
+
+            foreach ($projects as $project) {
+                $lines[] = sprintf(
+                    '- %s (%s), luas %.2f ha, lokasi %s',
+                    $project->nama_tanaman,
+                    $project->jenis_tanaman,
+                    $project->luas_lahan,
+                    $project->lokasi,
+                );
+            }
+        }
+
+        if ($predictions->isNotEmpty()) {
+            $lines[] = 'Prediksi terbaru:';
+
+            foreach ($predictions as $prediction) {
+                $lines[] = sprintf(
+                    '- %s: %.2f ton, status %s, faktor dominan %s, tanggal %s',
+                    $prediction->project?->nama_tanaman ?? 'Tanaman',
+                    $prediction->estimasi_panen_ton,
+                    $prediction->status,
+                    $prediction->faktor_dominan,
+                    $prediction->tanggal_prediksi?->format('Y-m-d') ?? '-',
+                );
+            }
+        } else {
+            $lines[] = 'Belum ada riwayat prediksi tersimpan.';
+        }
+
+        $lines[] = 'Gunakan konteks ini hanya jika relevan dengan pertanyaan user. Jika tidak relevan, jangan paksakan.';
+
+        return implode("\n", $lines);
     }
 
     /**
