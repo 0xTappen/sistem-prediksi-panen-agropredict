@@ -123,6 +123,8 @@ export default function GISDashboard({ projects }: { projects: Project[] }) {
                                     opacity: 0,
                                     attribution: 'Radar &copy; RainViewer',
                                     zIndex: 10,
+                                    maxNativeZoom: 12,
+                                    maxZoom: 19,
                                 });
                             });
 
