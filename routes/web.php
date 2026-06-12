@@ -48,6 +48,19 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('histories/{history}', [PredictionHistoryController::class, 'destroy'])->name('histories.destroy');
     Route::get('histories/{history}/export-pdf', [PredictionHistoryController::class, 'exportPdf'])->name('histories.export-pdf');
 
+    Route::get('simulator', function () {
+        return Inertia::render('simulator/index');
+    })->name('simulator.index');
+
+    Route::get('gis', function () {
+        $projects = \App\Models\Project::all();
+        // create dummy lat lon if project doesn't have it, since it's just location string right now
+        // But for expo we can just mock some locations in the view
+        return Inertia::render('gis/index', [
+            'projects' => $projects
+        ]);
+    })->name('gis.index');
+
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 });

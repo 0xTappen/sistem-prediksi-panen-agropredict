@@ -5,9 +5,11 @@ import {
     CloudSun,
     History,
     Leaf,
+    MapPin,
     Settings,
     Sparkles,
     Sprout,
+    SlidersHorizontal,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import SidebarNav from '@/components/sidebar-nav';
@@ -49,6 +51,16 @@ const mainNavItems: NavItem[] = [
         title: 'Hasil Prediksi',
         href: '/histories?menu=hasil',
         icon: BarChart3,
+    },
+    {
+        title: 'GIS Map',
+        href: '/gis',
+        icon: MapPin,
+    },
+    {
+        title: 'Simulasi',
+        href: '/simulator',
+        icon: SlidersHorizontal,
     },
     {
         title: 'Riwayat',
