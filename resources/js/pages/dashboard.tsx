@@ -55,7 +55,7 @@ export default function Dashboard({
             <div className="space-y-6">
                 <PageHeader
                     title={`Halo, ${auth.user?.name}`}
-                    description="Pantau perkembangan proyek lahan dan prediksi panen Anda hari ini."
+                    description="Pantau proyek lahan, evaluasi AI, dan prediksi panen Anda hari ini."
                     action={
                         <Button asChild>
                             <Link href="/projects/create">

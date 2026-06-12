@@ -69,12 +69,12 @@ const fitur = [
     {
         icon: BarChart3,
         title: 'Prediksi Hasil Panen',
-        description: 'Hitung estimasi panen dalam ton berdasarkan data input.',
+        description: 'Estimasi panen berbasis benchmark agronomi dengan confidence dan faktor dominan.',
     },
     {
         icon: Sparkles,
         title: 'Rekomendasi Pintar',
-        description: 'Saran pupuk, waktu tanam, panen, dan perawatan tanaman.',
+        description: 'Saran tindakan dengan insight AI, simulasi perbaikan, dan chatbot kontekstual.',
     },
     {
         icon: FileText,
@@ -88,13 +88,14 @@ const steps = [
     'Tambahkan proyek lahan.',
     'Input data pupuk, tanah, air, dan cuaca.',
     'Sistem memproses prediksi.',
-    'Hasil panen dan rekomendasi ditampilkan.',
+    'Hasil panen, confidence model, dan rekomendasi ditampilkan.',
     'Simpan riwayat atau export PDF.',
 ];
 
 const manfaat = [
     'Membantu prediksi panen lebih terukur.',
     'Mendukung keputusan pemupukan.',
+    'Menjelaskan alasan prediksi lewat faktor dominan dan benchmark terdekat.',
     'Memantau kondisi lahan dari musim ke musim.',
     'Menyimpan arsip hasil prediksi secara rapi.',
     'Mempermudah pembuatan laporan PDF.',
@@ -233,11 +234,11 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                         <div>
                             <Badge className="bg-secondary text-secondary-foreground">Smart Agriculture</Badge>
                             <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-5xl">
-                                Prediksi Hasil Panen & Rekomendasi Pertanian Berbasis Data
+                                Explainable AI untuk Prediksi Panen, Rekomendasi, dan Asisten Pertanian
                             </h1>
                             <p className="mt-5 text-base leading-7 text-muted-foreground">
-                                Kelola proyek lahan, analisis kondisi tanah dan cuaca, prediksi estimasi panen,
-                                lalu dapatkan rekomendasi pupuk, waktu tanam, dan perawatan tanaman secara praktis.
+                                Kelola proyek lahan, analisis kondisi tanah dan cuaca, jalankan prediksi panen berbasis benchmark,
+                                lalu lihat confidence model, simulasi perbaikan, dan rekomendasi tindakan yang lebih kontekstual.
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
                                 <Button asChild>

@@ -85,7 +85,7 @@
         <ul>
             <li>Aplikasi full-stack berbasis Laravel + Inertia + React untuk manajemen data pertanian.</li>
             <li>User dapat membuat proyek lahan, input variabel agronomi, lalu memproses prediksi hasil panen.</li>
-            <li>Hasil prediksi dilengkapi skor kecocokan, faktor dominan, dan rekomendasi tindakan.</li>
+            <li>Hasil prediksi dilengkapi skor kecocokan, confidence model, faktor dominan, dan simulasi perbaikan.</li>
             <li>Semua hasil dapat disimpan ke riwayat dan diekspor ke PDF.</li>
         </ul>
     </div>
@@ -128,7 +128,8 @@
             <li>Autentikasi user + proteksi route internal.</li>
             <li>Integrasi cuaca otomatis dan fallback manual.</li>
             <li>Prediksi estimasi panen (ton), skor, status, dan faktor dominan.</li>
-            <li>Rekomendasi perawatan berbasis kondisi input.</li>
+            <li>Evaluasi model internal: MAE, RMSE, dan perbandingan terhadap baseline rule-based.</li>
+            <li>Rekomendasi perawatan berbasis kondisi input dan insight AI yang bisa dijelaskan.</li>
             <li>Riwayat prediksi dengan detail dan export laporan PDF.</li>
         </ul>
     </div>
@@ -139,6 +140,8 @@
             <li>Backend: Laravel 13, Eloquent ORM, Form Request, Service Layer, Policy.</li>
             <li>Frontend: Inertia.js, React 19, TypeScript, Tailwind CSS, shadcn/ui.</li>
             <li>Visualisasi: Recharts.</li>
+            <li>Engine AI: KNN agronomi berbasis benchmark internal + explainable scoring.</li>
+            <li>AI Assistant: LLM provider (Groq/Gemini) yang digrounding ke konteks akun pengguna.</li>
             <li>Laporan: DomPDF.</li>
             <li>Testing: Pest.</li>
             <li>Database dev: SQLite.</li>
@@ -150,15 +153,17 @@
         <ul>
             <li>UI modern, responsif, dan mudah digunakan.</li>
             <li>Data tersimpan terstruktur dan bisa dilacak ulang.</li>
-            <li>Pengambilan keputusan lebih objektif berbasis data.</li>
-            <li>Mudah dikembangkan ke model ML eksternal di tahap selanjutnya.</li>
+            <li>Pengambilan keputusan lebih objektif berbasis benchmark agronomi dan evaluasi model.</li>
+            <li>Prediksi dapat dijelaskan lewat confidence, faktor dominan, kasus benchmark terdekat, dan simulasi perbaikan.</li>
+            <li>Chatbot AI tidak generik, tetapi mempertimbangkan proyek dan riwayat prediksi user.</li>
         </ul>
     </div>
 
     <div class="section">
         <h2>8. Rencana Pengembangan</h2>
         <ul>
-            <li>Integrasi model machine learning eksternal untuk akurasi lebih tinggi.</li>
+            <li>Perluasan benchmark internal menjadi dataset lapangan nyata multi-musim dan multi-wilayah.</li>
+            <li>Eksperimen model lanjutan (gradient boosting / ensemble) di atas benchmark yang sama.</li>
             <li>Integrasi IoT sensor lahan (kelembapan/suhu) real-time.</li>
             <li>Notifikasi otomatis risiko cuaca dan rekomendasi tindakan.</li>
             <li>Analitik tren lintas musim tanam.</li>
@@ -169,7 +174,7 @@
         <h2>9. Penutup</h2>
         <ul>
             <li>Sistem membantu digitalisasi proses pertanian secara praktis.</li>
-            <li>Prediksi + rekomendasi mempercepat pengambilan keputusan lapangan.</li>
+            <li>Prediksi + rekomendasi + explainable AI mempercepat pengambilan keputusan lapangan.</li>
             <li>Riwayat dan PDF mendukung dokumentasi serta evaluasi berkelanjutan.</li>
         </ul>
     </div>
