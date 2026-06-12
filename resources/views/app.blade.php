@@ -7,9 +7,18 @@
 
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "dark" }}';
+                const appearance = @json($appearance ?? 'dark');
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark);
+                const maxAge = 60 * 60 * 24 * 365;
+
+                try {
+                    localStorage.setItem('appearance', appearance);
+                } catch (error) {
+                    console.warn('Unable to persist appearance in localStorage.', error);
+                }
+
+                document.cookie = `appearance=${appearance};path=/;max-age=${maxAge};SameSite=Lax`;
 
                 if (isDark) {
                     document.documentElement.classList.add('dark');

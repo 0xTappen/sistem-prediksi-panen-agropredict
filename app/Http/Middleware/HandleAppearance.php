@@ -17,12 +17,16 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $appearance = $request->cookie('appearance');
+        $appearance = null;
 
-        if (! in_array($appearance, ['light', 'dark', 'system'], true) && $request->user()) {
+        if ($request->user()) {
             $appearance = UserSetting::query()
                 ->where('user_id', $request->user()->id)
                 ->value('theme');
+        }
+
+        if (! in_array($appearance, ['light', 'dark', 'system'], true)) {
+            $appearance = $request->cookie('appearance');
         }
 
         if (! in_array($appearance, ['light', 'dark', 'system'], true)) {

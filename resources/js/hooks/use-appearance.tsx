@@ -49,15 +49,15 @@ const getStoredAppearance = (): Appearance => {
         return 'dark';
     }
 
-    const stored = localStorage.getItem('appearance');
     const cookie = getCookieValue('appearance');
-
-    if (isAppearanceValue(stored)) {
-        return stored;
-    }
+    const stored = localStorage.getItem('appearance');
 
     if (isAppearanceValue(cookie)) {
         return cookie;
+    }
+
+    if (isAppearanceValue(stored)) {
+        return stored;
     }
 
     return 'dark';
